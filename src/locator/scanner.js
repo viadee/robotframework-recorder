@@ -29,6 +29,7 @@ const scanner = {
   },
 
   parseNode(time, node, attributesArray) {
+    /* FIXME: add handling for if hasattribute shadowroot */
     if (node !== undefined) {
       const hash = classifier(node) || { type: 'default' };
 

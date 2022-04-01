@@ -1,6 +1,9 @@
 # Change Log
 Robocorp Recorder
 
+## [0.6.2]
+- Remove unused `activeTab` version from extension permissions
+
 ## [0.6.1]
 - Fixed bug causing all XPath locators to use indices instead of heuristics for locator strategies.
 

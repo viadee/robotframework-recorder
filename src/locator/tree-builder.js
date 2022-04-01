@@ -38,6 +38,7 @@ const builder = {
         attr = element.className.length > 0 ? element.className.split(' ') : [];
       } else if (sel === 'index') {
         attr = 1;
+        // TODO: why is this commented?
         // attr = this._getIndex(element);
       } else { // name, id, for, href, title
         attr = element.getAttribute(sel);

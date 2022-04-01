@@ -1,3 +1,5 @@
+/* global Node */
+
 /* builder constructs an array of element and its parents
  Example
      <body>

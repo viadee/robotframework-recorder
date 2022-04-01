@@ -1,4 +1,4 @@
-/* global builder locator classifier */
+/* global builder locator classifier Node */
 
 const scanner = {
   limit: 1000,

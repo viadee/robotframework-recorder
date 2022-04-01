@@ -1,4 +1,4 @@
-/* global document chrome scanner XPathResult */
+/* global document chrome scanner XPathResult Node */
 
 const host = chrome;
 let strategyList = [];

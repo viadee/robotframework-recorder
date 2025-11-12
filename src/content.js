@@ -112,9 +112,11 @@ host.runtime.onMessage.addListener((request, sender, sendResponse) => {
     strategyList.push('index');
     document.addEventListener('change', recordChange, true);
     document.addEventListener('click', recordClick, true);
+    sendResponse({ ok: true, status: 'record listeners attached' });
   } else if (request.operation === 'stop') {
     document.removeEventListener('change', recordChange, true);
     document.removeEventListener('click', recordClick, true);
+    sendResponse({ ok: true, status: 'record listeners attached' });
   } else if (request.operation === 'scan') {
     strategyList = request.locators || defaultLocatorOrder;
     strategyList.push('index');
@@ -124,7 +126,9 @@ host.runtime.onMessage.addListener((request, sender, sendResponse) => {
     scanner.limit = 1000;
     const array = scanner.parseNodes([], document.body, strategyList);
     host.runtime.sendMessage({ operation: 'action', scripts: array });
+    sendResponse({ ok: true, status: 'record listeners attached' });
   } else if (request.operation === 'xpath-validate') {
     xpathValidation(request.xpath);
+    sendResponse({ ok: true });
   }
 });

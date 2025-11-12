@@ -1,13 +1,19 @@
 /* global chrome URL Blob */
 /* global instruction filename statusMessage url tab logo initializeTranslator */
 
+import {
+  url, logo, filename, statusMessage, instruction
+} from './constants.js';
+
+import { initializeTranslator } from './translator/robot-translator.js';
+
 const host = chrome;
 
 let list = [];
 let script;
 const storage = host.storage.local;
 const content = host.tabs;
-const icon = host.browserAction;
+const icon = host.action;
 const maxLength = 5000;
 let recordTab = 0;
 let demo = false;
@@ -15,68 +21,117 @@ let verify = false;
 let target = 'SeleniumLibrary';
 let syntax = 'rpa';
 
-// Initialize values in localStorage
-storage.set({
-  locators: ['for', 'name', 'id', 'title', 'href', 'class'],
-  operation: 'stop',
-  message: instruction,
-  demo: false,
-  verify: false,
-  canSave: false,
-  isBusy: false,
-  target: 'SeleniumLibrary'
-});
+async function setupStorageDefaults() {
+  const defaults = {
+    locators: ['for', 'name', 'id', 'title', 'href', 'class'],
+    operation: 'stop',
+    message: instruction,
+    demo: false,
+    verify: false,
+    canSave: false,
+    isBusy: false,
+    target: 'SeleniumLibrary'
+  };
 
-function selection(item) {
-  if (list.length === 0) {
-    list.push(item);
-    return;
+  const existing = await chrome.storage.local.get(Object.keys(defaults));
+  const toInit = {};
+
+  for (const [key, value] of Object.entries(defaults)) {
+    if (existing[key] === undefined) {
+      toInit[key] = value;
+    }
   }
+  if (Object.keys(toInit).length > 0) {
+    await chrome.storage.local.set(toInit);
+    console.log('Storage initialized with defaults:', toInit);
+  } else {
+    console.log('Storage already initialized');
+  }
+}
 
+async function initState() {
+  const saved = await chrome.storage.local.get({
+    list: [],
+    recordTab: 0,
+    demo: false,
+    verify: false
+  });
+  Object.assign({
+    list, recordTab, demo, verify
+  }, saved);
+  list = saved.list;
+  recordTab = saved.recordTab;
+  demo = saved.demo;
+  verify = saved.verify;
+  console.log('State loaded:', {
+    list, recordTab, demo, verify
+  });
+}
+
+async function saveState() {
+  await chrome.storage.local.set({
+    list, recordTab, demo, verify
+  });
+  console.log('State saved');
+}
+
+(async () => {
+  await setupStorageDefaults();
+  await initState();
+})();
+
+async function selection(item) {
   const prevItem = list[list.length - 1];
+  const shouldReplace = item.trigger === 'change' && prevItem && prevItem.trigger === 'click';
+  const timeGapOkay = !prevItem || Math.abs(item.time - prevItem.time) > 20;
 
-  if (Math.abs(item.time - prevItem.time) > 20) {
-    list.push(item);
-    return;
-  }
-
-  if (item.trigger === 'click') { return; }
-
-  if ((item.trigger === 'change') && (prevItem.trigger === 'click')) {
+  if (shouldReplace) {
     list[list.length - 1] = item;
-    return;
+  } else if (!prevItem || timeGapOkay || item.trigger !== 'click') {
+    list.push(item);
   }
 
-  list.push(item);
+  await saveState();
 }
 
 const logger = {
   debug: (data) => {
-    host.runtime.getBackgroundPage(page => page.console.debug(data));
+    console.debug(data);
   },
   error: (data) => {
-    host.runtime.getBackgroundPage(page => page.console.error(data));
+    console.error(data);
   }
 };
 
-function handleError(success) {
-  if (success) return;
+function handleError(error) {
   const lastError = host.runtime.lastError;
-  if (!success && lastError) {
-    logger.debug(lastError.message);
-    storage.set({ message: statusMessage.failure, canSave: false });
-  }
+  const message = (lastError && lastError.message) || (error && error.message) || String(error);
+  logger.debug('Chrome/API error:', message);
+  storage.set({ message: statusMessage.failure, canSave: false });
 }
 
-host.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  recordTab = sender.tab || message.recordTab || recordTab;
-  content.query({ active: true }, (tabs) => {
-    recordTab = tabs[0];
+function contentSendMessage(tabId, message) {
+  return new Promise((resolve, reject) => {
+    content.sendMessage(tabId, message, (response) => {
+      if (host.runtime && host.runtime.lastError) reject(host.runtime.lastError);
+      else resolve(response);
+    });
   });
-  return storage.get(['target', 'syntax'], (items) => {
+}
+
+host.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+  recordTab = sender.tab || message.recordTab || recordTab;
+  const [tab] = await content.query({ active: true });
+  if (tab !== null && tab !== undefined) {
+    recordTab = tab;
+  } else if (sender.tab) {
+    recordTab = sender.tab;
+  }
+  try {
+    const items = await storage.get(['target', 'syntax']);
     const translator = initializeTranslator(items.target, items.syntax);
     let { operation } = message;
-    host.runtime.getBackgroundPage(page => page.console.debug(message));
+    logger.debug(message);
 
     if (operation === 'record') {
       list = [];
@@ -85,32 +140,72 @@ host.runtime.onMessage.addListener((message, sender, sendResponse) => {
       list = [{
         type: 'url', path: recordTab.url, time: 0, trigger: 'record', title: recordTab.title
       }];
+      await saveState();
       storage.set({ message: statusMessage.record, operation: 'record', canSave: false });
+
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['src/content.js']
+        });
+        console.log('content.js injected into', tab.url);
+      } catch (err) {
+        console.error('Injection failed:', err);
+      }
+
       // FIXME: just passing handleError does not work. Need some advanced solution.
-      return content.sendMessage(recordTab.id, { operation });
+      try {
+        const response = await contentSendMessage(recordTab.id, { operation });
+        console.log('Response from the content script:', response);
+      } catch (err) {
+        handleError(err);
+      }
     } else if (operation === 'pause') {
       icon.setIcon({ path: logo.pause });
 
-      content.sendMessage(recordTab.id, { operation: 'stop' });
+      try {
+        const response = await contentSendMessage(recordTab.id, { operation: 'stop' });
+        console.log('Response from the content script:', response);
+      } catch (err) {
+        handleError(err);
+      }
+
       storage.set({ operation: 'pause', canSave: false, isBusy: false });
     } else if (operation === 'resume') {
       operation = 'record';
 
       icon.setIcon({ path: logo.record });
 
-      content.sendMessage(recordTab.id, { operation });
+      try {
+        const response = await contentSendMessage(recordTab.id, { operation });
+        console.log('Response from the content script:', response);
+      } catch (err) {
+        handleError(err);
+      }
+
       storage.set({ message: statusMessage.record, operation, canSave: false });
     } else if (operation === 'scan') {
       if (recordTab) {
         list = [{
           type: 'url', path: recordTab.url, time: 0, trigger: 'scan', title: recordTab.title
         }];
+        await saveState();
         // TODO: message.locators should be set here
-        storage.set({
-          message: statusMessage.scan, operation: 'scan', canSave: false, isBusy: true
-        }, content.sendMessage(recordTab.id, { operation, locators: message.locators }, handleError));
+        await storage.set({
+          message: statusMessage.scan,
+          operation: 'scan',
+          canSave: false,
+          isBusy: true
+        });
+
+        try {
+          const response = await contentSendMessage(recordTab.id, { operation, locators: message.locators });
+          console.log('Response from the content script:', response);
+        } catch (error) {
+          handleError(error);
+        }
       } else {
-        storage.set({
+        await storage.set({
           message: statusMessage.failedScan, operation: 'scan', canSave: false, isBusy: false
         });
       }
@@ -119,23 +214,42 @@ host.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       script = translator.generateOutput(list, maxLength, demo, verify);
       if (script) {
-        storage.set({
+        await storage.set({
           message: statusMessage.succesfulRecord, script, operation: 'stop', canSave: true
         });
-        content.sendMessage(recordTab.id, { operation: 'stop' });
+
+        try {
+          const response = await contentSendMessage(recordTab.id, { operation: 'stop' });
+          console.log('Response from the content script:', response);
+        } catch (error) {
+          handleError(error);
+        }
       } else {
-        storage.set({ message: statusMessage.failedRecord, operation, canSave: false });
-        content.sendMessage(recordTab.id, { operation: 'stop' });
+        await storage.set({ message: statusMessage.failedRecord, operation, canSave: false });
+        try {
+          const response = await contentSendMessage(recordTab.id, { operation: 'stop' });
+          console.log('Response from the content script:', response);
+        } catch (error) {
+          handleError(error);
+        }
       }
     } else if (operation === 'save') {
-      const file = translator.generateFile(list, maxLength, demo, verify);
-      logger.debug(file);
-      const blob = new Blob([file], { type: 'text/plain;charset=utf-8' });
-
-      host.downloads.download({
-        url: URL.createObjectURL(blob, { oneTimeOnly: true }),
-        filename
-      });
+      (async () => {
+        try {
+          const file = translator.generateFile(list, maxLength, demo, verify);
+          logger.debug(file);
+          const blob = new Blob([file], { type: 'text/plain;charset=utf-8' });
+          const reader = new FileReader();
+          reader.onload = () => {
+            chrome.downloads.download({ url: reader.result, filename });
+            sendResponse({ ok: true });
+          };
+          reader.readAsDataURL(blob);
+        } catch (err) {
+          sendResponse({ ok: false, error: err.message });
+        }
+      })();
+      return true;
     } else if (operation === 'settings') {
       ({
         demo, verify, target, syntax
@@ -146,9 +260,18 @@ host.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } else if (operation === 'load') {
       // TODO: this is what causes scan to run after page is refreshed
       // TODO: ensure state.locators has a value
-      storage.get({ operation: 'stop', locators: [] }, (state) => {
-        content.sendMessage(sender.tab.id, { operation: state.operation, locators: state.locators });
+      const state = await storage.get({
+        operation: 'stop',
+        locators: []
       });
+
+      try {
+        const response = await contentSendMessage(sender.tab.id,
+          { operation: state.operation, locators: state.locators });
+        console.log('Response from the content script:', response);
+      } catch (error) {
+        handleError(error);
+      }
     } else if (operation === 'info') {
       host.tabs.create({ url });
     } else if (operation === 'append') {
@@ -158,22 +281,32 @@ host.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } else if (operation === 'action') {
       icon.setIcon({ path: logo.stop });
       list = list.concat(message.scripts);
+      await saveState();
       script = translator.generateOutput(list, maxLength, demo, verify);
 
-      storage.set({
+      await storage.set({
         message: statusMessage.idle, script, operation: 'stop', isBusy: false, canSave: true
       });
     } else if (operation === 'clear-script') {
       list = [];
-      storage.set({ message: 'Cleared', canSave: false });
-      storage.remove('script');
+      await saveState();
+      await storage.set({ message: 'Cleared', canSave: false });
+      await storage.remove('script');
     } else if (operation === 'xpath-validate') {
-      content.sendMessage(recordTab.id, { operation: 'xpath-validate', xpath: message.xpath });
+      try {
+        const response = await contentSendMessage(recordTab.id, { operation: 'xpath-validate', xpath: message.xpath });
+        console.log('Response from the content script:', response);
+      } catch (error) {
+        handleError(error);
+      }
     } else if (operation === 'display') {
-      storage.set({ message: message.message });
+      await storage.set({ message: message.message });
     }
     // https://github.com/mozilla/webextension-polyfill/issues/130 lets chrome now that our callback succeeded
     sendResponse({});
-    return Promise.resolve('This should not show in console');
-  });
+  } catch (error) {
+    logger.error('Error reading from storage:', error);
+    sendResponse({});
+  }
+  return true;
 });

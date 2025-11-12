@@ -1,18 +1,18 @@
-const url = 'https://github.com/robocorp/Robotcorder';
+export const url = 'https://github.com/robocorp/Robotcorder';
 
-const tab = { active: true, currentWindow: true };
+export const tab = { active: true, currentWindow: true };
 
-const logo = {
+export const logo = {
   stop: '/assets/mark-128.png',
-  record: '/assets/btn-record.svg',
-  scan: '/assets/icon-target.svg',
+  record: '/assets/btn-record.png',
+  scan: '/assets/icon-target.png',
   action: '/assets/mark-128.png',
-  pause: '/assets/icon-pause.svg'
+  pause: '/assets/icon-pause.png'
 };
 // This does not seem to propagate correctly to background.js
-const filename = 'robot_script.robot';
+export const filename = 'robot_script.robot';
 
-const statusMessage = {
+export const statusMessage = {
   stop: 'Stopped',
   record: 'Recording action...',
   succesfulRecord: 'Recorded script',
@@ -21,10 +21,10 @@ const statusMessage = {
   idle: 'Idle',
 };
 
-const instruction = `Robocorp Recorder
+export const instruction = `Robocorp Recorder
   Generate a Robot Framework automation script by
   – Recording actions
   – Scanning the page for automatable inputs
    Automating automation 🤖`;
 
-const defaultLocatorOrder = ['for', 'name', 'id', 'title', 'href', 'class'];
+export const defaultLocatorOrder = ['for', 'name', 'id', 'title', 'href', 'class'];

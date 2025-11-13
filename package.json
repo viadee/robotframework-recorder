@@ -19,14 +19,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/viadee/Robotcorder.git"
+    "url": "git+https://github.com/viadee/robotframework-recorder.git"
   },
   "author": "@xylix",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/robotframework-recorder/Robotcorder/issues"
+    "url": "https://github.com/viadee/robotframework-recorder/issues"
   },
-  "homepage": "https://github.com/robotframework-recorder/Robotcorder#readme",
+  "homepage": "https://github.com/viadee/robotframework-recorder#readme",
   "devDependencies": {
     "chai": "^4.1.2",
     "eslint": "^5.0.0",

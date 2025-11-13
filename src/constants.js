@@ -1,4 +1,4 @@
-export const url = 'https://github.com/robocorp/Robotcorder';
+const url = 'https://github.com/robotframework-recorder/Robotcorder';
 
 export const tab = { active: true, currentWindow: true };
 

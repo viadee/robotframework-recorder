@@ -85,7 +85,7 @@ function xpathValidation(xpath) {
     // see https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType for list of possible `nodeType`s
     if (e.nodeType === Node.ELEMENT_NODE) {
       const d = document.createElement('div');
-      d.className = 'robocorp-recorder-highlight';
+      d.className = 'robotframework-recorder-highlight';
       d.appendChild(document.createTextNode(''));
       d.style.position = 'fixed';
       const rect = e.getBoundingClientRect();

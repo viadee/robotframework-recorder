@@ -1,6 +1,6 @@
-# Robocorp Recorder
+# RobotFramework Recorder
 
-![Build Status](https://github.com/robocorp/Robotcorder/workflows/on-push%20jobs/badge.svg)
+![Build Status](https://github.com/robotframework-recorder/Robotcorder/workflows/on-push%20jobs/badge.svg)
 
 > A browser extension that generates [RobotFramework](http://robotframework.org/) automation scripts for SeleniumLibrary and Browser. 
 
@@ -19,21 +19,21 @@ For understanding and extending the generated scripts, see upstream
 
 For understanding the XPATH selectors see [Xpath Cheatsheet](https://devhints.io/xpath)
 
-For extra guides you can check out https://robocorp.com/docs/development-howtos/browser for generic browser automation documentation and 
-https://robocorp.com/docs/development-howtos/browser/playwright for playwright based Browser library documentation.
+For extra guides you can check out https://robotframework-recorder.com/docs/development-howtos/browser for generic browser automation documentation and 
+https://robotframework-recorder.com/docs/development-howtos/browser/playwright for playwright based Browser library documentation.
 
 ## Screenshots
 ### Main view
 
-<img src="robocorp-assets/main-view.png" width="480" />
+<img src="robotframework-recorder-assets/main-view.png" width="480" />
 
 ### Settings
 
-<img src="robocorp-assets/settings-view.png" width="480" />
+<img src="robotframework-recorder-assets/settings-view.png" width="480" />
 
 ### Scan output
 
-<img src="robocorp-assets/scan-output.png" width="480" />
+<img src="robotframework-recorder-assets/scan-output.png" width="480" />
 
 ## Features
 
@@ -52,7 +52,7 @@ click on Extension options
 edit and update the locators
 
 ## Download
-Coming to chrome web store soon. For now see https://github.com/robocorp/Robotcorder/releases for manual installation of latest release.
+Coming to chrome web store soon. For now see https://github.com/robotframework-recorder/Robotcorder/releases for manual installation of latest release.
 <!--  [Robotcorder - Chrome Web Store](https://chrome.google.com/webstore/detail/robotcorder/ifiilbfgcemdapeibjfohnfpfmfblmpd) 
 -->
 
@@ -69,7 +69,7 @@ or
 5. Create new Pull Request
 
 ## Change Log
-Refer to [CHANGELOG.md](https://github.com/robocorp/Robotcorder/blob/master/CHANGELOG.md)
+Refer to [CHANGELOG.md](https://github.com/robotframework-recorder/Robotcorder/blob/master/CHANGELOG.md)
 
 <!--
 ## Github Pages

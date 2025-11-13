@@ -29,7 +29,7 @@ const rfbrowserMap = {
  * @param {'SeleniumLibrary' | 'Browser'} target
   * @param {'rpa' | 'testing'} syntax
  */
-const initializeTranslator = (target, syntax) => {
+export const initializeTranslator = (target, syntax) => {
   const map = target === 'SeleniumLibrary'
     ? seleniumLibraryMap
     : rfbrowserMap;

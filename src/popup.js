@@ -35,10 +35,10 @@ function analytics(_) {}
 
 const logger = {
   debug: (data, rest) => {
-    host.runtime.getBackgroundPage(page => page.console.debug(data, rest));
+    console.debug(data, rest);
   },
   error: (data, rest) => {
-    host.runtime.getBackgroundPage(page => page.console.error(data, rest));
+    console.error(data, rest);
   }
 };
 
@@ -86,7 +86,7 @@ function show(ids, visible) {
 
   elements.forEach((elem) => {
     if (elem) visible ? elem.classList.remove('hidden') : elem.classList.add('hidden');
-    else logger.errror('Tried to toggle visibility of non-existent element');
+    else logger.error('Tried to toggle visibility of non-existent element');
   });
 }
 
@@ -181,20 +181,40 @@ function busy(e) {
   }
 }
 
-function operation(e) {
+function runtimeSendMessage(message) {
+  return new Promise((resolve, reject) => {
+    host.runtime.sendMessage(message, (response) => {
+      if (host.runtime && host.runtime.lastError) reject(host.runtime.lastError);
+      else resolve(response);
+    });
+  });
+}
+
+
+async function operation(e) {
   toggle(e);
-  // FIXME: change in displayStatus signature is reason why now status sometimes shows Object object.
-  // Go back to old signature or figure out other way around
-  host.runtime.sendMessage({ operation: e.target.id }, displayStatus);
+  try {
+    const resp = await runtimeSendMessage({ operation: e.target.id });
+    // FIXME: change in displayStatus signature is reason why now status sometimes shows Object object.
+    // Go back to old signature or figure out other way around
+    displayStatus(resp);
+  } catch (err) {
+    logger.error('operation error:', err);
+  }
   analytics(['_trackEvent', e.target.id, '^-^']);
 }
 
-function xpathValidate(event) {
+async function xpathValidate(event) {
   const xpath = document.getElementById('textinput-xpath').value;
-  host.runtime.sendMessage({ operation: 'xpath-validate', xpath });
+  try {
+    const response = await runtimeSendMessage({ operation: 'xpath-validate', xpath });
+    console.log('Response from the content script:', response);
+  } catch (err) {
+    logger.error('operation error:', err);
+  }
 }
 
-function updateSettings(e) {
+async function updateSettings(e) {
   const demo = document.getElementById('demo').checked;
   const verify = document.getElementById('verify').checked;
   const rfbrowserRadio = document.getElementById('target_rfbrowser');
@@ -206,9 +226,15 @@ function updateSettings(e) {
     ? 'rpa'
     : 'testing';
 
-  host.runtime.sendMessage({
-    operation: 'settings', demo, verify, target, syntax
-  });
+  try {
+    const response = await runtimeSendMessage({
+      operation: 'settings', demo, verify, target, syntax
+    });
+    console.log('Response from the content script:', response);
+  } catch (err) {
+    logger.error('operation error:', err);
+  }
+
   analytics(['_trackEvent', 'setting', e.target.id]);
 }
 
@@ -216,21 +242,24 @@ function info(e) {
   $('body').data('chardinJs').toggle();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  storage.get({
-    message: 'Record or Scan',
-    operation: 'idle',
-    canSave: false,
-    isBusy: false,
-    demo: false,
-    verify: false,
-    target: 'SeleniumLibrary',
-    syntax: 'rpa',
-    locators: [],
-    script: '',
-  }, (state) => {
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const state = await storage.get({
+      message: 'Record or Scan',
+      operation: 'idle',
+      canSave: false,
+      isBusy: false,
+      demo: false,
+      verify: false,
+      target: 'SeleniumLibrary',
+      syntax: 'rpa',
+      locators: [],
+      script: '',
+    });
+
     displayStatus(state.message);
     displayScript(state.script);
+
     // FIXME: rename target to current operation and toggle's first param to `state` instead of `e`
     toggle({
       target: { id: state.operation },
@@ -241,36 +270,38 @@ document.addEventListener('DOMContentLoaded', () => {
       library_target: state.target,
       syntax: state.syntax,
     });
-  });
 
-  debug ? document.getElementById('textarea-log').classList.remove('hidden') : 0;
+    debug ? document.getElementById('textarea-log').classList.remove('hidden') : 0;
 
-  [
-    'record',
-    'resume',
-    'stop',
-    'pause',
-    'save',
-    'scan',
-    'xpath-console',
-    'settings',
-    'clear-script',
-  ].forEach((id) => {
-    document.getElementById(id).addEventListener('click', operation);
-  });
+    [
+      'record',
+      'resume',
+      'stop',
+      'pause',
+      'save',
+      'scan',
+      'xpath-console',
+      'settings',
+      'clear-script',
+    ].forEach((id) => {
+      document.getElementById(id).addEventListener('click', operation);
+    });
 
-  ['demo', 'verify'].forEach((id) => {
-    document.getElementById(id).addEventListener('change', updateSettings);
-  });
+    ['demo', 'verify'].forEach((id) => {
+      document.getElementById(id).addEventListener('change', updateSettings);
+    });
 
-  ['target', 'syntax'].forEach((cls) => {
-    Array.from(document.getElementsByClassName(cls))
-      .forEach(elem => elem.addEventListener('change', updateSettings));
-  });
+    ['target', 'syntax'].forEach((cls) => {
+      Array.from(document.getElementsByClassName(cls))
+        .forEach(elem => elem.addEventListener('change', updateSettings));
+    });
 
-  document.getElementById('textinput-xpath').addEventListener('input', xpathValidate);
-  $('body').chardinJs();
-  document.getElementById('info').addEventListener('click', info);
+    document.getElementById('textinput-xpath').addEventListener('input', xpathValidate);
+    $('body').chardinJs();
+    document.getElementById('info').addEventListener('click', info);
+  } catch (err) {
+    console.error(err);
+  }
 }, false);
 
 host.storage.onChanged.addListener((changes, _) => {

@@ -1,5 +1,5 @@
 # Change Log
-Robocorp Recorder
+RobotFramework Recorder
 
 ## [0.6.2]
 - Remove unused `activeTab` version from extension permissions
@@ -23,7 +23,7 @@ Robocorp Recorder
 - Add clear button
 
 ## [0.2.0]
-- Add Robocorp style icons and branding
+- Add RobotFramework Recorder style icons and branding
 - Remove need for "all-pages" permission
 
 ## [0.1.0]

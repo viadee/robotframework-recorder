@@ -85,7 +85,7 @@ function xpathValidation(xpath) {
     // see https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType for list of possible `nodeType`s
     if (e.nodeType === Node.ELEMENT_NODE) {
       const d = document.createElement('div');
-      d.className = 'robocorp-recorder-highlight';
+      d.className = 'robotframework-recorder-highlight';
       d.appendChild(document.createTextNode(''));
       d.style.position = 'fixed';
       const rect = e.getBoundingClientRect();
@@ -112,9 +112,11 @@ host.runtime.onMessage.addListener((request, sender, sendResponse) => {
     strategyList.push('index');
     document.addEventListener('change', recordChange, true);
     document.addEventListener('click', recordClick, true);
+    sendResponse({ ok: true, status: 'record listeners attached' });
   } else if (request.operation === 'stop') {
     document.removeEventListener('change', recordChange, true);
     document.removeEventListener('click', recordClick, true);
+    sendResponse({ ok: true, status: 'record listeners attached' });
   } else if (request.operation === 'scan') {
     strategyList = request.locators || defaultLocatorOrder;
     strategyList.push('index');
@@ -124,7 +126,9 @@ host.runtime.onMessage.addListener((request, sender, sendResponse) => {
     scanner.limit = 1000;
     const array = scanner.parseNodes([], document.body, strategyList);
     host.runtime.sendMessage({ operation: 'action', scripts: array });
+    sendResponse({ ok: true, status: 'record listeners attached' });
   } else if (request.operation === 'xpath-validate') {
     xpathValidation(request.xpath);
+    sendResponse({ ok: true });
   }
 });

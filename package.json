@@ -1,6 +1,6 @@
 {
-  "name": "robocorp-recorder",
-  "version": "0.6.2",
+  "name": "robotframework-recorder",
+  "version": "0.7.0",
   "description": "A browser extension that records user action and scans the page to generate RobotFramework test script templates",
   "main": "src.background.js",
   "directories": {
@@ -9,8 +9,8 @@
   "scripts": {
     "lint": "./node_modules/.bin/eslint .",
     "lint-fix": "./node_modules/.bin/eslint . --fix",
-    "test-local": "yarn run mocha -r test/setup.js test/* --reporter nyan",
-    "test-coverage": "yarn run nyc mocha -r test/setup.js test/* --reporter nyan",
+    "test-local": "yarn run mocha -r test/setup.js test/**/*.js --reporter nyan",
+    "test-coverage": "yarn run nyc mocha -r test/setup.js test/**/*.js --reporter nyan",
     "test": "yarn run lint-fix && yarn run test-local",
     "export": "./script/export.command",
     "postinstall": "husky install",
@@ -24,9 +24,9 @@
   "author": "@xylix",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/robocorp/Robotcorder/issues"
+    "url": "https://github.com/robotframework-recorder/Robotcorder/issues"
   },
-  "homepage": "https://github.com/robocorp/Robotcorder#readme",
+  "homepage": "https://github.com/robotframework-recorder/Robotcorder#readme",
   "devDependencies": {
     "chai": "^4.1.2",
     "eslint": "^5.0.0",

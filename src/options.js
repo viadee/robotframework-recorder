@@ -9,12 +9,9 @@ function update() {
   storage.set({ locators: array });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  storage.get({
-    locators: []
-  }, (state) => {
-    document.getElementById('custom-locators').value = state.locators.join(',');
-  });
+document.addEventListener('DOMContentLoaded', async () => {
+  const state = await storage.get({ locators: [] });
+  document.getElementById('custom-locators').value = state.locators.join(',');
   document.getElementById('update').addEventListener('click', update);
 });
 

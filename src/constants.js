@@ -1,4 +1,4 @@
-const url = 'https://github.com/viadee/robotframework-recorder';
+export const url = 'https://github.com/viadee/robotframework-recorder';
 
 export const tab = { active: true, currentWindow: true };
 

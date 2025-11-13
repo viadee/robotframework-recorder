@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "RobotFramework Recorder",
   "version": "0.6.2",
   "homepage_url": "https://github.com/robotframework-recorder/Robotcorder#robotframework-recorder",

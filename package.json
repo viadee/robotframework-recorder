@@ -1,6 +1,6 @@
 {
   "name": "robotframework-recorder",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "A browser extension that records user action and scans the page to generate RobotFramework test script templates",
   "main": "src.background.js",
   "directories": {

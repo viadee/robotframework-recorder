@@ -1,4 +1,4 @@
-const url = 'https://github.com/robotframework-recorder/Robotcorder';
+const url = 'https://github.com/viadee/robotframework-recorder';
 
 export const tab = { active: true, currentWindow: true };
 
@@ -21,7 +21,7 @@ export const statusMessage = {
   idle: 'Idle',
 };
 
-export const instruction = `Robocorp Recorder
+export const instruction = `robotframework-recorder
   Generate a Robot Framework automation script by
   – Recording actions
   – Scanning the page for automatable inputs

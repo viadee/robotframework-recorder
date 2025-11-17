@@ -42,7 +42,7 @@ class IntroTour {
    */
   start() {
     if (this.steps.length === 0) return;
-    
+
     this.isActive = true;
     this.currentStep = 0;
     this._createUI();
@@ -71,8 +71,10 @@ class IntroTour {
     const rect = step.element.getBoundingClientRect();
 
     // Update overlay
-    this.overlay.style.boxShadow = `0 0 0 9999px rgba(0, 0, 0, 0.7), 
-      inset 0 0 0 1px rgba(0, 192, 181, 0.3)`;
+    // build box-shadow in parts to avoid long lines (ESLint max-len)
+    const outerShadow = '0 0 0 9999px rgba(0, 0, 0, 0.7)';
+    const innerShadow = 'inset 0 0 0 1px rgba(0, 192, 181, 0.3)';
+    this.overlay.style.boxShadow = `${outerShadow}, ${innerShadow}`;
     this.overlay.style.top = `${rect.top}px`;
     this.overlay.style.left = `${rect.left}px`;
     this.overlay.style.width = `${rect.width}px`;
@@ -93,18 +95,27 @@ class IntroTour {
    */
   _positionTooltip(step, rect) {
     const padding = 12;
-    let top, left;
+    let top; let
+      left;
     const tooltipWidth = 280;
     const tooltipHeight = 100;
 
     switch (step.position) {
       case 'bottom':
         top = rect.bottom + padding;
-        left = Math.max(0, Math.min(rect.left + rect.width / 2 - tooltipWidth / 2, window.innerWidth - tooltipWidth - 10));
+        {
+          const centered = rect.left + rect.width / 2 - tooltipWidth / 2;
+          const maxLeft = window.innerWidth - tooltipWidth - 10;
+          left = Math.max(0, Math.min(centered, maxLeft));
+        }
         break;
       case 'top':
         top = rect.top - tooltipHeight - padding;
-        left = Math.max(0, Math.min(rect.left + rect.width / 2 - tooltipWidth / 2, window.innerWidth - tooltipWidth - 10));
+        {
+          const centered = rect.left + rect.width / 2 - tooltipWidth / 2;
+          const maxLeft = window.innerWidth - tooltipWidth - 10;
+          left = Math.max(0, Math.min(centered, maxLeft));
+        }
         break;
       case 'left':
         top = rect.top + rect.height / 2 - tooltipHeight / 2;
@@ -156,30 +167,42 @@ class IntroTour {
       border-left: 4px solid #00c0b5;
     `;
 
-    this.tooltip.innerHTML = `
-      <div class="intro-text" style="margin-bottom: 12px; color: #333;"></div>
-      <div style="display: flex; gap: 8px; justify-content: flex-end;">
-        <button class="intro-skip" style="
-          padding: 4px 12px;
-          border: none;
-          background: #f0f0f0;
-          color: #666;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 12px;
-        ">Skip</button>
-        <button class="intro-next" style="
-          padding: 4px 12px;
-          border: none;
-          background: #00c0b5;
-          color: white;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 12px;
-          font-weight: 500;
-        ">Next ›</button>
-      </div>
-    `;
+    // Build tooltip content programmatically to satisfy max-len rule
+    const introText = document.createElement('div');
+    introText.className = 'intro-text';
+    introText.style.cssText = 'margin-bottom: 12px; color: #333;';
+
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end;';
+
+    const skipBtn = document.createElement('button');
+    skipBtn.className = 'intro-skip';
+    skipBtn.textContent = 'Skip';
+    // set styles individually to avoid long lines
+    skipBtn.style.padding = '4px 12px';
+    skipBtn.style.border = 'none';
+    skipBtn.style.background = '#f0f0f0';
+    skipBtn.style.color = '#666';
+    skipBtn.style.borderRadius = '4px';
+    skipBtn.style.cursor = 'pointer';
+    skipBtn.style.fontSize = '12px';
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'intro-next';
+    nextBtn.textContent = 'Next ›';
+    nextBtn.style.padding = '4px 12px';
+    nextBtn.style.border = 'none';
+    nextBtn.style.background = '#00c0b5';
+    nextBtn.style.color = 'white';
+    nextBtn.style.borderRadius = '4px';
+    nextBtn.style.cursor = 'pointer';
+    nextBtn.style.fontSize = '12px';
+    nextBtn.style.fontWeight = '500';
+
+    actions.appendChild(skipBtn);
+    actions.appendChild(nextBtn);
+    this.tooltip.appendChild(introText);
+    this.tooltip.appendChild(actions);
 
     document.body.appendChild(this.tooltip);
 

@@ -6,6 +6,7 @@ import {
 } from './constants.js';
 
 import { initializeTranslator } from './translator/robot-translator.js';
+import logger from './logger.js';
 
 const host = chrome;
 
@@ -43,9 +44,9 @@ async function setupStorageDefaults() {
   }
   if (Object.keys(toInit).length > 0) {
     await chrome.storage.local.set(toInit);
-    console.log('Storage initialized with defaults:', toInit);
+    logger.info('Storage initialized with defaults:', toInit);
   } else {
-    console.log('Storage already initialized');
+    logger.info('Storage already initialized');
   }
 }
 
@@ -63,7 +64,7 @@ async function initState() {
   recordTab = saved.recordTab;
   demo = saved.demo;
   verify = saved.verify;
-  console.log('State loaded:', {
+  logger.info('State loaded:', {
     list, recordTab, demo, verify
   });
 }
@@ -72,7 +73,7 @@ async function saveState() {
   await chrome.storage.local.set({
     list, recordTab, demo, verify
   });
-  console.log('State saved');
+  logger.info('State saved');
 }
 
 (async () => {
@@ -94,14 +95,7 @@ async function selection(item) {
   await saveState();
 }
 
-const logger = {
-  debug: (data) => {
-    console.debug(data);
-  },
-  error: (data) => {
-    console.error(data);
-  }
-};
+// Using centralized logger imported above
 
 function handleError(error) {
   const lastError = host.runtime.lastError;
@@ -148,15 +142,15 @@ host.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
           target: { tabId: tab.id },
           files: ['src/content.js']
         });
-        console.log('content.js injected into', tab.url);
+        logger.info('content.js injected into', tab.url);
       } catch (err) {
-        console.error('Injection failed:', err);
+        logger.error('Injection failed:', err);
       }
 
       // FIXME: just passing handleError does not work. Need some advanced solution.
       try {
         const response = await contentSendMessage(recordTab.id, { operation });
-        console.log('Response from the content script:', response);
+        logger.info('Response from the content script:', response);
       } catch (err) {
         handleError(err);
       }
@@ -165,7 +159,7 @@ host.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
       try {
         const response = await contentSendMessage(recordTab.id, { operation: 'stop' });
-        console.log('Response from the content script:', response);
+        logger.info('Response from the content script:', response);
       } catch (err) {
         handleError(err);
       }
@@ -178,7 +172,7 @@ host.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
       try {
         const response = await contentSendMessage(recordTab.id, { operation });
-        console.log('Response from the content script:', response);
+        logger.info('Response from the content script:', response);
       } catch (err) {
         handleError(err);
       }
@@ -200,7 +194,7 @@ host.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
         try {
           const response = await contentSendMessage(recordTab.id, { operation, locators: message.locators });
-          console.log('Response from the content script:', response);
+          logger.info('Response from the content script:', response);
         } catch (error) {
           handleError(error);
         }
@@ -220,7 +214,7 @@ host.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
         try {
           const response = await contentSendMessage(recordTab.id, { operation: 'stop' });
-          console.log('Response from the content script:', response);
+          logger.info('Response from the content script:', response);
         } catch (error) {
           handleError(error);
         }
@@ -228,7 +222,7 @@ host.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         await storage.set({ message: statusMessage.failedRecord, operation, canSave: false });
         try {
           const response = await contentSendMessage(recordTab.id, { operation: 'stop' });
-          console.log('Response from the content script:', response);
+          logger.info('Response from the content script:', response);
         } catch (error) {
           handleError(error);
         }
@@ -268,7 +262,7 @@ host.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       try {
         const response = await contentSendMessage(sender.tab.id,
           { operation: state.operation, locators: state.locators });
-        console.log('Response from the content script:', response);
+        logger.info('Response from the content script:', response);
       } catch (error) {
         handleError(error);
       }
@@ -295,12 +289,19 @@ host.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     } else if (operation === 'xpath-validate') {
       try {
         const response = await contentSendMessage(recordTab.id, { operation: 'xpath-validate', xpath: message.xpath });
-        console.log('Response from the content script:', response);
+        logger.info('Response from the content script:', response);
       } catch (error) {
         handleError(error);
       }
     } else if (operation === 'display') {
       await storage.set({ message: message.message });
+    } else if (operation === 'open-actions-view') {
+      // Open a dedicated Actions Viewer page in a new tab (uses extension page context)
+      try {
+        host.tabs.create({ url: chrome.runtime.getURL('src/actions-view.html') });
+      } catch (err) {
+        logger.warn('Could not open actions view:', err);
+      }
     }
     // https://github.com/mozilla/webextension-polyfill/issues/130 lets chrome now that our callback succeeded
     sendResponse({});

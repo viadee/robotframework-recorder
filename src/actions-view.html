@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Recorder - Actions Viewer</title>
+  <link rel="stylesheet" type="text/css" href="../assets/style.css">
+</head>
+
+<body class="container actions-view">
+  <div class="padding">
+  <h2 id="actions-heading">Aufgenommene Aktionen</h2>
+    <div class="pad">
+      <div id="status-field"></div>
+    </div>
+
+    <div id="actions-controls" class="pad">
+      <button class="btn btn-wide" id="refresh">Refresh</button>
+      <button class="btn btn-wide" id="export-robot">Export .robot</button>
+      <button class="btn btn-wide" id="export-json">Export JSON</button>
+      <button class="btn btn-wide" id="copy-script">Copy Script</button>
+      <button class="btn btn-wide" id="clear-script">Clear</button>
+    </div>
+
+    <div id="actions-list" class="pad" style="max-height:60vh; overflow:auto; padding:12px; border-radius:4px;">
+      <!-- actions will be rendered here -->
+    </div>
+  </div>
+
+  <script src="translations.js"></script>
+  <script type="module" src="actions-view.js"></script>
+</body>
+</html>

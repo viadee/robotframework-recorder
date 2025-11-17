@@ -4,7 +4,6 @@
   <meta charset="utf-8"/>
   <title>RobotFramework Recorder</title>
   <link async rel="stylesheet" type="text/css" href="../assets/style.css">
-  <script src="../vendors/clipboard-2.0.0.min.js"></script>
 </head>
 
 <body class="container" tabindex="-1">
@@ -33,10 +32,15 @@
       <button class="btn" id="xpath-console" tabindex="-1" title="Show/hide XPath console" data-intro="Open interactive XPath console" data-position="bottom">
         Validate XPath
       </button>
+      
+      <button class="btn" id="open-actions-view" tabindex="-1" title="Open actions viewer">
+        Script View
+      </button>
+
     </span>
 
-    <button class="btn btn-thin btn-last" id="info" tabindex="-1" title="Toggle instructions"></button>
-    <button class="btn btn-thin" id="settings" tabindex="-1" title="show/hide settings" data-intro="Settings" data-position="bottom"></button>
+  <button class="btn btn-thin btn-last" id="info" tabindex="-1" title="Toggle instructions"></button>
+  <button class="btn btn-thin" id="settings" tabindex="-1" title="show/hide settings" data-intro="Settings" data-position="bottom"></button>
 ´  </div>
 
   <div class="pad">
@@ -93,11 +97,13 @@
   </div>
 
   <div class="pad" id="script-container">
-    <!-- Has to be a one-liner to not have extra indentation / newlines in the visible pre block -->
-    <pre><code id="script-output" tabindex="-1" title="Generated script"></code></pre>
+    <!-- Line-based editable script view -->
+    <div id="script-container-lines">
+      <div id="script-lines" class="script-lines" tabindex="-1" title="Generated script"></div>
+    </div>
     <div id="script-actions">
       <div>
-        <button class="btn btn-context" id="copy" tabindex="-1" title="Copy to clipboard" data-clipboard-target="#script-output" disabled>
+        <button class="btn btn-context" id="copy" tabindex="-1" title="Copy to clipboard" disabled>
           Copy
         </button>
         <button class="btn btn-context" id="save" tabindex="-1" disabled title="Download test script">
@@ -105,6 +111,9 @@
         </button>
       </div>
       <div>
+        <button class="btn btn-context" id="add-line" tabindex="-1" title="Add new line">
+          Add line
+        </button>
         <button class="btn btn-context btn-last" id="clear-script" tabindex="-1" title="Clear script">
           Clear
         </button>
@@ -122,6 +131,6 @@
 
   <script src="intro.js"></script>
   <script src="translations.js"></script>
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
 </body>
 </html>

@@ -50,9 +50,37 @@ const translations = {
     customLocators: 'Custom Locators',
     customLocatorsHint: 'Add your own flavoured locators! Separate with a commas.',
     language: 'Language',
-    
+
     // Default message
-    recordOrScan: 'Record or Scan'
+    recordOrScan: 'Record or Scan',
+    // Actions-View specific
+    refresh: 'Refresh',
+    exportRobot: 'Export .robot',
+    exportJson: 'Export JSON',
+    copyScript: 'Copy Script',
+    noActions: 'No actions available',
+    lineCopied: 'Line copied',
+    lineExported: 'Line exported',
+    copyThisLine: 'Copy this line',
+    exportThisLine: 'Export this line as text',
+    editUnderlying: 'Edit underlying action',
+    onlyPathEditable: 'Only path lines can be edited',
+    cancel: 'Cancel',
+    save: 'Save',
+    edit: 'Edit',
+    actionSaved: 'Action saved',
+    saveFailed: 'Failed to save action',
+    scriptAvailable: 'Script available',
+    noScriptGenerated: 'No script generated',
+    exportStarted: 'Export started',
+    exportFailed: 'Export failed',
+    // Page labels
+    pageTitle: 'Recorder - Actions Viewer',
+    actionsHeading: 'Recorded actions',
+    actionsListPlaceholder: 'Actions will appear here',
+    // Popup specific
+    addLine: 'Add line',
+    addLineTitle: 'Add new line'
   },
   de: {
     // Buttons
@@ -89,10 +117,10 @@ const translations = {
     settingsIntro: 'Einstellungen',
 
     // Settings Panel
-    targetLibrary: 'Zielbibliotek',
+    targetLibrary: 'Zielbibliothek',
     selenium: 'RPA.Browser.Selenium / SeleniumLibrary',
     rfBrowser: 'RobotFramework Browser',
-    targetSyntax: 'RF-Zielssyntax',
+    targetSyntax: 'RF-Zielsyntax',
     rpa: 'RPA (Tasks)',
     testAutomation: 'Testautomatisierung (Testfälle)',
     advancedSettings: 'Erweiterte Einstellungen',
@@ -100,14 +128,43 @@ const translations = {
     checkPageContains: 'Überprüfen, ob die Seite das Element enthält, bevor die Aktion ausgeführt wird',
 
     // Options Page
-    customLocators: 'Benutzerdefinierte Locator',
-    customLocatorsHint: 'Fügen Sie Ihre eigenen Locator hinzu! Mit Kommas trennen.',
+    customLocators: 'Benutzerdefinierte Locatoren',
+    customLocatorsHint: 'Fügen Sie eigene Locatoren hinzu. Mit Kommas trennen.',
     language: 'Sprache',
-    
+
     // Default message
-    recordOrScan: 'Aufzeichnen oder Scannen'
+    recordOrScan: 'Aufzeichnen oder Scannen',
+    // Actions-View specific
+    refresh: 'Aktualisieren',
+    exportRobot: 'Export .robot',
+    exportJson: 'Export JSON',
+    copyScript: 'Skript kopieren',
+    noActions: 'Keine Aktionen vorhanden',
+    lineCopied: 'Zeile kopiert',
+    lineExported: 'Zeile exportiert',
+    copyThisLine: 'Diese Zeile kopieren',
+    exportThisLine: 'Diese Zeile als Text exportieren',
+    editUnderlying: 'Zugehörige Aktion bearbeiten',
+    onlyPathEditable: 'Nur Pfadzeilen können bearbeitet werden',
+    cancel: 'Abbrechen',
+    save: 'Speichern',
+    edit: 'Bearbeiten',
+    actionSaved: 'Aktion gespeichert',
+    saveFailed: 'Fehler beim Speichern',
+    scriptAvailable: 'Script verfügbar',
+    noScriptGenerated: 'Kein Script generiert',
+    exportStarted: 'Export gestartet',
+    exportFailed: 'Export fehlgeschlagen',
+    // Page labels
+    pageTitle: 'Recorder - Aktionen',
+    actionsHeading: 'Aufgenommene Aktionen',
+    actionsListPlaceholder: 'Aktionen werden hier angezeigt',
+    // Popup specific
+    addLine: 'Zeile hinzufügen',
+    addLineTitle: 'Neue Zeile hinzufügen'
   }
 };
+
 
 /**
  * Get the current language setting or detect from browser locale
@@ -160,4 +217,13 @@ if (typeof exports !== 'undefined') {
   exports.t = t;
   exports.getTranslations = getTranslations;
   exports.setLanguage = setLanguage;
+}
+
+// ES module exports (for module imports)
+// Expose globals for classic script usage (popup etc.)
+if (typeof window !== 'undefined') {
+  window.getCurrentLanguage = getCurrentLanguage;
+  window.t = t;
+  window.getTranslations = getTranslations;
+  window.setLanguage = setLanguage;
 }

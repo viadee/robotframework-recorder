@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 
 /**
  * Script to generate logo variants from robot-logo.png
@@ -16,7 +17,8 @@
 const fs = require('fs');
 const path = require('path');
 
-// Check if Sharp is installed
+// Check if Sharp is installed (optional dependency)
+/* eslint-disable global-require, import/no-unresolved */
 let sharp;
 try {
   sharp = require('sharp');
@@ -25,6 +27,7 @@ try {
   console.error('Please install it first with: npm install sharp');
   process.exit(1);
 }
+/* eslint-enable global-require, import/no-unresolved */
 
 const assetsDir = path.join(__dirname, '..', 'robotframework-recorder-assets');
 const outputDir = path.join(__dirname, '..', 'assets');
@@ -42,24 +45,26 @@ const sizes = [16, 32, 48, 64, 96, 128, 256];
 const promises = [];
 
 // Generate each size
-sizes.forEach(size => {
+sizes.forEach((size) => {
   console.log(`📐 Generating mark-${size}.png (${size}x${size})...`);
-  
+
   const promise = sharp(sourceFile)
     .resize(size, size, {
       fit: 'contain',
-      background: { r: 255, g: 255, b: 255, alpha: 0 }
+      background: {
+        r: 255, g: 255, b: 255, alpha: 0
+      }
     })
     .png()
     .toFile(path.join(outputDir, `mark-${size}.png`))
     .then(() => {
       console.log(`✅ mark-${size}.png created successfully`);
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(`❌ Error creating mark-${size}.png:`, err.message);
       process.exit(1);
     });
-  
+
   promises.push(promise);
 });
 
@@ -70,14 +75,18 @@ Promise.all(promises)
     return sharp(sourceFile)
       .resize(96, 96, {
         fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 0 }
+        background: {
+          r: 255, g: 255, b: 255, alpha: 0
+        }
       })
       .extend({
         top: 16,
         bottom: 16,
         left: 16,
         right: 16,
-        background: { r: 255, g: 255, b: 255, alpha: 0 }
+        background: {
+          r: 255, g: 255, b: 255, alpha: 0
+        }
       })
       .png()
       .toFile(path.join(outputDir, 'mark-128-padded.png'));
@@ -87,7 +96,7 @@ Promise.all(promises)
     console.log('\n🎉 All logos generated successfully!');
     console.log(`📁 Output location: ${outputDir}`);
   })
-  .catch(err => {
+  .catch((err) => {
     console.error('❌ Error creating mark-128-padded.png:', err.message);
     process.exit(1);
   });

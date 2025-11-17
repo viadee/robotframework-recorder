@@ -67,6 +67,10 @@
     background-image: url("icon-settings.svg");
 }
 
+#open-actions-view::before {
+    background-image: url("clipboard.svg");
+}
+
 #info::before {
     background-image: url("icon-info.svg");
 }
@@ -93,12 +97,15 @@ html {
     font-size: 16px;
     box-sizing: border-box;
 }
+/* Avoid animating layout properties globally (causes popup to appear small then grow).
+   Only transition color/background/opacity which are cheap and non-layout-affecting. */
 html * {
-    transition: all 0.1s;
+    transition: color 0.12s, background-color 0.12s, opacity 0.12s;
 }
 
 .container {
-    width: 520px;
+    /* prefer up to 1200px but never exceed viewport width */
+    width: min(1200px, 96vw);
     text-align: left;
 }
 
@@ -227,6 +234,117 @@ img {
     border-radius: 4px;
 }
 
+/* Line-based script editor styles */
+#script-container-lines {
+    padding: 12px;
+}
+
+#script-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 420px;
+    overflow: auto;
+    padding-right: 8px;
+}
+
+/* Prevent container and script area from animating width/height during load */
+.container, #script-lines, #script-container {
+    transition-property: none !important;
+}
+
+.script-line-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.02);
+    padding: 6px;
+    border-radius: 4px;
+}
+
+.script-line-index {
+    min-width: 28px;
+    text-align: right;
+    color: #A8A8B3;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.script-line-input {
+    flex: 1 1 auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 3px;
+    border: 1px solid #444851;
+    background: #23262A;
+    color: #E6E6E9;
+    outline: none;
+}
+.script-line-input:focus {
+    border-color: #6C50FA;
+    box-shadow: 0 0 0 3px rgba(108,80,250,0.08);
+}
+
+.script-line-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-small {
+    padding: 4px 6px;
+    font-size: 12px;
+    border-radius: 3px;
+}
+
+/* Icon-only small buttons used in actions-view */
+.icon-btn {
+    padding: 6px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+}
+.icon-btn::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 16px 16px;
+}
+.icon-btn:hover {
+    background: rgba(255,255,255,0.02);
+    border-color: rgba(255,255,255,0.04);
+}
+
+/* specific icon mappings */
+.icon-copy::before { background-image: url("../assets/icon-copy.svg"); }
+.icon-export::before { background-image: url("../assets/icon-download.svg"); }
+.icon-edit::before { background-image: url("../assets/icon-download.svg"); }
+.icon-cancel::before { background-image: url("../assets/icon-x.svg"); }
+.icon-delete::before { background-image: url("../assets/icon-delete-blank.svg"); }
+
+.btn-danger {
+    background: transparent;
+    color: #FF6B6B;
+    border: 1px solid rgba(255,107,107,0.12);
+}
+
+#script-actions {
+        background: #212428;
+        height: 40px;
+        padding: 6px 12px;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+}
+
 #status-field {
     font-size: 16px;
 }
@@ -349,4 +467,160 @@ input[type="checkbox"], input[type="radio"] {
 
 .copy-ok, .copy-fail {
     background-color: transparent;
+}
+
+/* Dark mode specifically for the Actions-View page. Scoped under .actions-view so
+     it doesn't affect other pages (popup etc.). */
+.actions-view {
+    color: #E6E6E9;
+    background: #0F1113;
+}
+.actions-view h2, .actions-view h3 {
+    color: #EDEDED;
+}
+.actions-view #actions-controls .btn {
+    background: #141518;
+    color: #DCE7FF;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.actions-view #actions-controls .btn:hover {
+    background: #1A1C20;
+    border-color: rgba(108,80,250,0.18);
+}
+.actions-view .pad {
+    color: #CFCFD4;
+}
+.actions-view #actions-list {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.03);
+}
+.actions-view #script-container {
+    background-color: transparent;
+}
+.actions-view .script-line-row {
+    background: rgba(255,255,255,0.02);
+}
+.actions-view .script-line-index {
+    color: #9FA3AD;
+}
+.actions-view .script-line-input {
+    background: #0D0F11;
+    border: 1px solid rgba(255,255,255,0.04);
+    color: #E6E6E9;
+}
+.actions-view .script-line-input:focus {
+    border-color: #6C50FA;
+    box-shadow: 0 0 0 3px rgba(108,80,250,0.08);
+}
+.actions-view .icon-btn {
+    border: 1px solid transparent;
+}
+.actions-view .icon-edit::before {
+    /* In Actions-View the edit button should visually match the export button.
+       Use the same download icon and inherit normal sizing. */
+    background-image: url("../assets/icon-download.svg");
+    width: 16px;
+    height: 16px;
+    content: '';
+}
+.actions-view .icon-btn:hover {
+    background: rgba(108,80,250,0.06);
+    border-color: rgba(108,80,250,0.12);
+}
+.actions-view #script-actions {
+    background: #0B0C0E;
+    border-top: 1px solid rgba(255,255,255,0.02);
+}
+.actions-view #script-output {
+    color: #DCE7FF;
+}
+.actions-view .btn-danger {
+    border: 1px solid rgba(255,107,107,0.08);
+}
+
+/* New Actions-View specific button system. We intentionally isolate these styles
+   from the existing global `button` and `.btn` styles to allow a dedicated
+   redesign for the actions page without touching the popup. */
+.actions-view .av-top-btn {
+    padding: 8px 12px;
+    margin-right: 8px;
+    background: linear-gradient(180deg,#111216,#14161A);
+    color: #E6E6E9;
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.actions-view .av-top-btn:focus {
+    outline: 2px solid rgba(108,80,250,0.18);
+}
+.actions-view .av-top-btn:hover {
+    background: #1A1C20;
+    border-color: rgba(108,80,250,0.12);
+}
+
+/* Compact text button used inline next to each script line when needed */
+.actions-view .av-btn {
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.03);
+    background: transparent;
+    color: #DCE7FF;
+}
+.actions-view .av-btn--primary {
+    background: linear-gradient(180deg,#6C50FA,#5636E0);
+    color: #FFFFFF;
+    border: none;
+}
+.actions-view .av-btn--ghost {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.02);
+    color: #CFCFD4;
+}
+
+/* Icon-only button variant used in script rows */
+.actions-view .av-icon-btn {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 0;
+}
+.actions-view .av-icon-btn:focus {
+    outline: 2px solid rgba(108,80,250,0.14);
+}
+.actions-view .av-icon-btn:hover {
+    background: rgba(108,80,250,0.06);
+    border-color: rgba(108,80,250,0.12);
+}
+.actions-view .av-icon-btn::before {
+    content: '';
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 18px 18px;
+}
+
+/* Icon mappings for the new classes (reuse assets) */
+.actions-view .av-icon-copy::before { background-image: url("../assets/icon-copy.svg"); }
+.actions-view .av-icon-export::before { background-image: url("../assets/icon-download.svg"); }
+.actions-view .av-icon-edit::before { background-image: url("../assets/icon-download.svg"); }
+.actions-view .av-icon-cancel::before { background-image: url("../assets/icon-x.svg"); }
+.actions-view .av-icon-delete::before { background-image: url("../assets/icon-delete-blank.svg"); }
+
+/* Row control container spacing tuned for new buttons */
+.actions-view .script-line-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }

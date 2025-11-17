@@ -1,7 +1,10 @@
-/* global document $ chrome ClipboardJS chardinJs */
+/* global document chrome ClipboardJS IntroTour t getCurrentLanguage setLanguage */
 const debug = false;
 const host = chrome;
 const storage = host.storage.local;
+
+let currentLanguage = 'en';
+let introTour = null;
 
 /*eslint-disable */
 /* 
@@ -45,8 +48,9 @@ const logger = {
 const clipboard = new ClipboardJS('#copy');
 
 const copyStatus = (className) => {
-  $('#copy').addClass(className);
-  setTimeout(() => { $('#copy').removeClass(className); }, 3000);
+  const copyButton = document.getElementById('copy');
+  copyButton.classList.add(className);
+  setTimeout(() => { copyButton.classList.remove(className); }, 3000);
 };
 
 clipboard.on('success', (e) => {
@@ -239,11 +243,77 @@ async function updateSettings(e) {
 }
 
 function info(e) {
-  $('body').data('chardinJs').toggle();
+  if (introTour) {
+    introTour.toggle();
+  }
+}
+
+/**
+ * Update all UI elements with translations for the given language
+ */
+function updateUITranslations(language) {
+  // Buttons
+  document.getElementById('record').textContent = t('record', language);
+  document.getElementById('stop').textContent = t('stop', language);
+  document.getElementById('resume').textContent = t('resume', language);
+  document.getElementById('pause').textContent = t('pause', language);
+  document.getElementById('scan').textContent = t('scanPage', language);
+  document.getElementById('xpath-console').textContent = t('validateXPath', language);
+  document.getElementById('copy').textContent = t('copy', language);
+  document.getElementById('save').textContent = t('download', language);
+  document.getElementById('clear-script').textContent = t('clear', language);
+
+  // Titles
+  document.getElementById('record').title = t('recordTitle', language);
+  document.getElementById('stop').title = t('stopTitle', language);
+  document.getElementById('resume').title = t('resumeTitle', language);
+  document.getElementById('pause').title = t('pauseTitle', language);
+  document.getElementById('scan').title = t('scanPageTitle', language);
+  document.getElementById('xpath-console').title = t('validateXPathTitle', language);
+  document.getElementById('info').title = t('infoTitle', language);
+  document.getElementById('settings').title = t('settingsTitle', language);
+  document.getElementById('copy').title = t('copyTitle', language);
+  document.getElementById('save').title = t('downloadTitle', language);
+  document.getElementById('clear-script').title = t('clearTitle', language);
+
+  // Data-intro
+  document.getElementById('record').setAttribute('data-intro', t('recordIntro', language));
+  document.getElementById('scan').setAttribute('data-intro', t('scanIntro', language));
+  document.getElementById('xpath-console').setAttribute('data-intro', t('xpathIntro', language));
+  document.getElementById('settings').setAttribute('data-intro', t('settingsIntro', language));
+
+  // Placeholder
+  document.getElementById('textinput-xpath').placeholder = t('xpathPlaceholder', language);
+
+  // Settings Panel
+  document.getElementById('language-label').textContent = t('language', language);
+  document.getElementById('target-library-label').textContent = t('targetLibrary', language);
+  document.getElementById('selenium-label').textContent = t('selenium', language);
+  document.getElementById('rfbrowser-label').textContent = t('rfBrowser', language);
+  document.getElementById('target-syntax-label').textContent = t('targetSyntax', language);
+  document.getElementById('rpa-label').textContent = t('rpa', language);
+  document.getElementById('test-automation-label').textContent = t('testAutomation', language);
+  document.getElementById('advanced-settings-label').textContent = t('advancedSettings', language);
+  document.getElementById('demo-label').textContent = t('addSleep', language);
+  document.getElementById('verify-label').textContent = t('checkPageContains', language);
+}
+
+/**
+ * Handle language change
+ */
+async function changeLanguage(e) {
+  const newLanguage = e.target.value;
+  currentLanguage = newLanguage;
+  setLanguage(newLanguage);
+  updateUITranslations(newLanguage);
+  analytics(['_trackEvent', 'language', newLanguage]);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
+    // Load current language
+    currentLanguage = await getCurrentLanguage();
+    
     const state = await storage.get({
       message: 'Record or Scan',
       operation: 'idle',
@@ -251,14 +321,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       isBusy: false,
       demo: false,
       verify: false,
-      target: 'SeleniumLibrary',
+      target: 'Browser',
       syntax: 'rpa',
       locators: [],
       script: '',
     });
 
+    // Update default message with translation
+    if (state.message === 'Record or Scan') {
+      state.message = t('recordOrScan', currentLanguage);
+    }
+
     displayStatus(state.message);
     displayScript(state.script);
+
+    // Update UI translations
+    updateUITranslations(currentLanguage);
+
+    // Set language radio button
+    document.getElementById(`lang_${currentLanguage}`).checked = true;
 
     // FIXME: rename target to current operation and toggle's first param to `state` instead of `e`
     toggle({
@@ -296,8 +377,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         .forEach(elem => elem.addEventListener('change', updateSettings));
     });
 
+    // Language change event listener
+    Array.from(document.getElementsByClassName('language-option'))
+      .forEach(elem => elem.addEventListener('change', changeLanguage));
+
     document.getElementById('textinput-xpath').addEventListener('input', xpathValidate);
-    $('body').chardinJs();
+    
+    // Initialize intro tour
+    introTour = new IntroTour();
+    introTour.init();
+    
     document.getElementById('info').addEventListener('click', info);
   } catch (err) {
     console.error(err);

@@ -3,10 +3,39 @@ const sinon = require('sinon');
 const { builder } = require('../../src/locator/tree-builder');
 
 describe('construct', () => {
-  describe.skip('_getIndex()', () => {
-    it('return 0 for only child', () => { });
-    it('return count for last child', () => { });
-    it('return count for 2nd child', () => { });
+  describe('_getIndex()', () => {
+    it('return 0 for only child', () => {
+      // parent with single child of same tag
+      const parent = document.createElement('div');
+      const child = document.createElement('span');
+      parent.appendChild(child);
+      // builder expects element.parentNode to exist
+      expect(builder._getIndex(child)).to.equal(0);
+    });
+
+    it('return count for last child', () => {
+      const parent = document.createElement('div');
+      const a = document.createElement('span');
+      const b = document.createElement('span');
+      const c = document.createElement('span');
+      parent.appendChild(a);
+      parent.appendChild(b);
+      parent.appendChild(c);
+      // last child should return 3 (position among same-tag siblings)
+      expect(builder._getIndex(c)).to.equal(3);
+    });
+
+    it('return index for 2nd child', () => {
+      const parent = document.createElement('div');
+      const a = document.createElement('span');
+      const b = document.createElement('span');
+      const c = document.createElement('span');
+      parent.appendChild(a);
+      parent.appendChild(b);
+      parent.appendChild(c);
+      // middle child should return 2
+      expect(builder._getIndex(b)).to.equal(2);
+    });
   });
 
   describe('_buildAttributes()', () => {

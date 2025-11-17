@@ -35,18 +35,18 @@ async function changeLanguage(e) {
 document.addEventListener('DOMContentLoaded', async () => {
   // Load current language
   currentLanguage = await getCurrentLanguage();
-  
+
   const state = await storage.get({ locators: [] });
   document.getElementById('custom-locators').value = state.locators.join(',');
-  
+
   // Update UI translations
   updateUITranslations(currentLanguage);
-  
+
   // Set language radio button
   document.getElementById(`lang_${currentLanguage}`).checked = true;
-  
+
   document.getElementById('update').addEventListener('click', update);
-  
+
   // Language change event listener
   Array.from(document.getElementsByClassName('language-option'))
     .forEach(elem => elem.addEventListener('change', changeLanguage));

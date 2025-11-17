@@ -61,6 +61,64 @@ Coming to chrome web store soon. For now see https://github.com/robotframework-r
 or
 ``` $ npm run export ```
 
+## Development setup (Deutsch)
+
+Wenn du lokal an diesem Projekt arbeiten möchtest, hier ein kurzes Setup:
+
+1. Abhängigkeiten installieren
+
+```bash
+# Installiere Abhängigkeiten
+npm install
+```
+
+2. Yarn verfügbar machen (optional)
+
+Das Projekt nutzt `yarn` in den `package.json`-Skripten. Du kannst Yarn global installieren oder Corepack (empfohlen bei neueren Node-Versionen) benutzen:
+
+```bash
+# Global per npm
+npm install -g yarn
+
+# Oder (Node >= 16.10) Corepack aktivieren und Yarn bereitstellen
+corepack enable
+corepack prepare yarn@stable --activate
+```
+
+Hinweis: Husky-Pre-Commit-Hook verwendet `npx yarn test` — das bevorzugt die lokal installierte Yarn-Version aus `node_modules` und erfordert keine globale Installation, solange `npm install` ausgeführt wurde.
+
+3. Tests & Linter
+
+```bash
+# Lint (statisch)
+npm run lint
+
+# Voller Testlauf (inkl. Linter + Unit-Tests)
+npm test
+```
+
+4. Husky pre-commit
+
+Vor jedem Commit läuft der pre-commit Hook und führt `npx yarn test` aus. Falls du den Hook einmal temporär überspringen willst:
+
+```bash
+git commit -m "message" --no-verify
+```
+
+Wenn du Husky dauerhaft deaktivieren willst (nicht empfohlen), kannst du in der aktuellen Shell `export HUSKY=0` setzen.
+
+5. Chrome Store ZIP erstellen
+
+Erzeuge ein ZIP-Paket für den Chrome Web Store (im `dist`-Ordner):
+
+```bash
+mkdir -p dist
+zip -r dist/robocorp-recorder-chrome.zip manifest.json src assets vendors robotframework-recorder-assets static script README.md LICENSE -x "*/test/*" "*/node_modules/*" ".github/*" "dist/*" "*.DS_Store"
+```
+
+Das erzeugte Archiv kannst du dann im Chrome Web Store Developer Dashboard hochladen.
+
+
 ## Contributing
 1. Fork it
 2. Create your feature branch (git checkout -b my-new-feature)

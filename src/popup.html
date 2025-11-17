@@ -3,13 +3,8 @@
 <head>
   <meta charset="utf-8"/>
   <title>RobotFramework Recorder</title>
-  <link async rel="stylesheet" type="text/css" href="../vendors/jquery-ui.min.css"/>
   <link async rel="stylesheet" type="text/css" href="../assets/style.css">
-  <script src="../vendors/jquery-3.3.1.min.js"></script>
-  <script src="../vendors/jquery-ui.min.js"></script>
   <script src="../vendors/clipboard-2.0.0.min.js"></script>
-  <link href="../vendors/chardinjs.css" rel="stylesheet">
-  <script src="../vendors/chardinjs.min.js"></script>
 </head>
 
 <body class="container" tabindex="-1">
@@ -42,7 +37,7 @@
 
     <button class="btn btn-thin btn-last" id="info" tabindex="-1" title="Toggle instructions"></button>
     <button class="btn btn-thin" id="settings" tabindex="-1" title="show/hide settings" data-intro="Settings" data-position="bottom"></button>
-  </div>
+´  </div>
 
   <div class="pad">
     <output id="status-field"></output>
@@ -51,36 +46,47 @@
   <div id="settings-panel" class="hidden">
     <div class="panel-row">
       <div>
-        <h3>Target Library</h3>
-        <div class="toggle">
-          <input type="radio" class="target" id="target_seleniumlibrary" name="target_library">
-          <label for="target_seleniumlibrary">RPA.Browser.Selenium / SeleniumLibrary</label>
-        </div>
+        <h3 id="target-library-label">Target Library</h3>
         <div class="toggle toggle-last">
           <input type="radio" class="target" id="target_rfbrowser" name="target_library">
-          <label for="target_rfbrowser">RobotFramework Browser</label>
+          <label for="target_rfbrowser" id="rfbrowser-label">RobotFramework Browser</label>
+        </div>
+        <div class="toggle">
+          <input type="radio" class="target" id="target_seleniumlibrary" name="target_library">
+          <label for="target_seleniumlibrary" id="selenium-label">RPA.Browser.Selenium / SeleniumLibrary</label>
         </div>
       </div>
       <div>
-        <h3>Target RF Syntax</h3>
+        <h3 id="target-syntax-label">Target RF Syntax</h3>
         <div class="toggle">
           <input type="radio" class="syntax" name="syntax" id="syntax_rpa" >
-          <label for="syntax_rpa">RPA (Tasks)</label>
+          <label for="syntax_rpa" id="rpa-label">RPA (Tasks)</label>
         </div>
         <div class="toggle toggle-last">
           <input type="radio" class="syntax" name="syntax" id="syntax_testing" >
-          <label for="syntax_testing">Test Automation (Test cases)</label>
+          <label for="syntax_testing" id="test-automation-label">Test Automation (Test cases)</label>
         </div>
       </div>
       <div>
-        <h3>Advanced settings</h3>
+        <h3 id="language-label">Language</h3>
+        <div class="toggle">
+          <input type="radio" class="language-option" id="lang_en" name="language" value="en">
+          <label for="lang_en">English</label>
+        </div>
+        <div class="toggle toggle-last">
+          <input type="radio" class="language-option" id="lang_de" name="language" value="de">
+          <label for="lang_de">Deutsch</label>
+        </div>
+      </div>
+      <div>
+        <h3 id="advanced-settings-label">Advanced settings</h3>
         <div class="toggle">
           <input type="checkbox" id="demo" />
-          <label for="demo"> Add a sleep after each action (for creating easy-to-showcase demo scripts) </label>
+          <label for="demo" id="demo-label"> Add a sleep after each action (for creating easy-to-showcase demo scripts) </label>
         </div>
         <div class="toggle toggle-last">
           <input type="checkbox" id="verify" />
-          <label for="verify">Check page contains element before performing the action</label>
+          <label for="verify" id="verify-label">Check page contains element before performing the action</label>
         </div>
       </div>
     </div>
@@ -114,6 +120,8 @@
     <textarea class="hidden" id="textarea-log" tabindex="-1" readonly></textarea>
   </div>
 
+  <script src="intro.js"></script>
+  <script src="translations.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

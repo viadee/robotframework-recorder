@@ -2,6 +2,7 @@
 <html>
 
 <head>
+  <script src="./translations.js"></script>
   <script src="./options.js"></script>
   <link async rel="stylesheet" type="text/css" href="../assets/style.css">
   <link async rel="stylesheet" type="text/css" href="../assets/options.css">
@@ -10,7 +11,17 @@
 <div class="panel-options">
   <div class="grid-container">
     <div class="heading">
-      <h1>Custom Locators</h1>
+      <h1 id="language-label">Language</h1>
+      <div id="language-hint">
+        <input type="radio" class="language-option" id="lang_en" name="language" value="en">
+        <label for="lang_en">English</label>
+        <input type="radio" class="language-option" id="lang_de" name="language" value="de">
+        <label for="lang_de">Deutsch</label>
+      </div>
+    </div>
+    <hr>
+    <div class="heading">
+      <h1 id="custom-locators-heading">Custom Locators</h1>
       <div id="hint">Add your own flavoured locators! Separate with a commas.</div>
     </div>
     <input type="text" id="custom-locators"/>

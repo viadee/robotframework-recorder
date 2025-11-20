@@ -1,7 +1,5 @@
 # RobotFramework Recorder
 
-![Build Status](https://github.com/robotframework-recorder/Robotcorder/workflows/on-push%20jobs/badge.svg)
-
 > A browser extension that generates [RobotFramework](http://robotframework.org/) automation scripts for SeleniumLibrary and Browser. 
 
 Fork based on https://github.com/sohwendy/Robotcorder

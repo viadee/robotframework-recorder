@@ -41,6 +41,11 @@ https://robotframework-recorder.com/docs/development-howtos/browser/playwright f
 2. Scanning the html page
 3. Validating XPATH selectors
 
+## New Fratures (2025)
+
+Create a exportable List of Commands instead of plain text
+Added an overview page for recordings.
+
 ### New Features RF Recorder (December 2020)
 Choose between generating locators for Robotframework Browser (playwright based) or SeleniumLibrary
 Choose between RPA or Test focused Robot Framework syntax

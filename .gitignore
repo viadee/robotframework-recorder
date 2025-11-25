@@ -3,3 +3,6 @@ archive/
 node_modules/
 .nyc_output
 test-user-data-dir
+.staging-pack-*
+dist/
+.DS_Store

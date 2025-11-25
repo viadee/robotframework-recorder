@@ -11,34 +11,6 @@ let introTour = null;
 let scriptLines = [];
 let nextLineId = 1;
 
-/*eslint-disable */
-/* 
-const gaAccount = 'UA-88380525-1';
-const version = '0.3.0';
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', gaAccount]);
-_gaq.push(['_trackPageview']);
-(function() {
-  var ga = document.createElement('script');
-  ga.type = 'text/javascript';
-  ga.async = true;
-  ga.src = 'https://ssl.google-analytics.com/ga.js';
-  var s = document.getElementsByTagName('script')[0];
-  s.parentNode.insertBefore(ga, s);
-})();
-*/
-/* eslint-enable */
-
-/*
-function analytics(data) {
-  const versionData = data;
-  if (gaAccount) {
-    versionData[2] = `${version} ${data[2]}`;
-    _gaq.push(versionData);
-    logger(gaAccount && versionData);
-  }
-}
-*/
 function analytics(_) {}
 
 // use centralized logger (imported above)

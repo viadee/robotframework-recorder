@@ -1,11 +1,10 @@
-/* global document chrome t getCurrentLanguage setLanguage */
+import { t, getCurrentLanguage, setLanguage } from './translations.js';
 
-const host = chrome;
-const storage = host.storage.local;
+const storage = chrome.storage.local;
 
 let currentLanguage = 'en';
 
-function update() {
+export function update() {
   const values = document.getElementById('custom-locators').value;
   const array = values ? values.split(',') : ['for', 'name', 'id', 'title', 'href', 'class'];
   storage.set({ locators: array });
@@ -33,23 +32,17 @@ async function changeLanguage(e) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Load current language
   currentLanguage = await getCurrentLanguage();
 
   const state = await storage.get({ locators: [] });
   document.getElementById('custom-locators').value = state.locators.join(',');
 
-  // Update UI translations
   updateUITranslations(currentLanguage);
 
-  // Set language radio button
   document.getElementById(`lang_${currentLanguage}`).checked = true;
 
   document.getElementById('update').addEventListener('click', update);
 
-  // Language change event listener
   Array.from(document.getElementsByClassName('language-option'))
     .forEach(elem => elem.addEventListener('change', changeLanguage));
 });
-
-if (typeof exports !== 'undefined') exports.update = update;

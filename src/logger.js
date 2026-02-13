@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // Centralized logger for the extension UI/background scripts.
 // Using a single file makes it easy to control verbosity and
 // avoids ESLint no-console warnings throughout the codebase.
@@ -8,7 +7,7 @@ const DEBUG = false;
 const safeStringify = (v) => {
   try {
     return typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v);
-  } catch (e) {
+  } catch (_e) {
     return String(v);
   }
 };

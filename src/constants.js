@@ -1,3 +1,7 @@
+/**
+ * Shared constants for the RobotFramework Recorder extension.
+ */
+
 export const url = 'https://github.com/viadee/robotframework-recorder';
 
 export const tab = { active: true, currentWindow: true };
@@ -9,14 +13,22 @@ export const logo = {
   action: '/assets/mark-128.png',
   pause: '/assets/icon-pause.png'
 };
-// This does not seem to propagate correctly to background.js
+
 export const filename = 'robot_script.robot';
+
+/** Default target library — unified across popup and background. */
+export const DEFAULT_TARGET = 'Browser';
+
+/** Default syntax mode. */
+export const DEFAULT_SYNTAX = 'rpa';
 
 export const statusMessage = {
   stop: 'Stopped',
   record: 'Recording action...',
   succesfulRecord: 'Recorded script',
+  failedRecord: 'Recording failed. No actions were captured.',
   scan: 'Scanning html document...',
+  failedScan: 'Scan failed. No active tab found.',
   failure: 'Operation failed. Please try refreshing the web page.',
   idle: 'Idle',
 };

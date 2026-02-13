@@ -1,7 +1,8 @@
 /* global chrome t getCurrentLanguage */
 
 import logger from './logger.js';
-import { filename } from './constants.js';
+// filename available from constants if needed for download features
+// import { filename } from './constants.js';
 import { initializeTranslator } from './translator/robot-translator.js';
 
 const storage = chrome.storage.local;
@@ -373,7 +374,7 @@ function init() {
     // set document title and heading according to language
     try {
       document.title = t('pageTitle', currentLanguage) || document.title;
-    } catch (e) {
+    } catch (_e) {
       // ignore if document not available
     }
     const heading = document.getElementById('actions-heading');

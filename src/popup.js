@@ -1,9 +1,9 @@
-/* global document chrome IntroTour t getCurrentLanguage setLanguage */
 import logger from './logger.js';
+import { IntroTour } from './intro.js';
+import { t, getCurrentLanguage, setLanguage } from './translations.js';
 
 const debug = false;
-const host = chrome;
-const storage = host.storage.local;
+const storage = chrome.storage.local;
 
 let currentLanguage = 'en';
 let introTour = null;
@@ -11,37 +11,106 @@ let introTour = null;
 let scriptLines = [];
 let nextLineId = 1;
 
-/*eslint-disable */
-/* 
-const gaAccount = 'UA-88380525-1';
-const version = '0.3.0';
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', gaAccount]);
-_gaq.push(['_trackPageview']);
-(function() {
-  var ga = document.createElement('script');
-  ga.type = 'text/javascript';
-  ga.async = true;
-  ga.src = 'https://ssl.google-analytics.com/ga.js';
-  var s = document.getElementsByTagName('script')[0];
-  s.parentNode.insertBefore(ga, s);
-})();
-*/
-/* eslint-enable */
+// ---------------------------------------------------------------------------
+// State Machine
+// ---------------------------------------------------------------------------
+// Each state defines which elements are shown, hidden, active, and inactive.
+// The toggle() function simply looks up the target state and applies it.
 
-/*
-function analytics(data) {
-  const versionData = data;
-  if (gaAccount) {
-    versionData[2] = `${version} ${data[2]}`;
-    _gaq.push(versionData);
-    logger(gaAccount && versionData);
-  }
+const STATE_CONFIG = {
+  idle: {
+    show: ['record', 'scan', 'xpath-console', 'status-field', 'script-container'],
+    hide: ['pause', 'resume', 'stop', 'xpath-inputs', 'settings-panel'],
+    active: [],
+    inactive: ['xpath-console', 'settings', 'scan'],
+    enableSettings: false,
+    saveEnabled: false,
+  },
+  record: {
+    show: ['pause', 'stop', 'status-field'],
+    hide: ['record', 'scan', 'xpath-console', 'resume', 'script-container',
+      'settings-panel', 'xpath-inputs'],
+    active: [],
+    inactive: ['xpath-console', 'settings', 'scan'],
+    enableSettings: false,
+    saveEnabled: false,
+  },
+  resume: {
+    show: ['pause', 'stop', 'status-field'],
+    hide: ['record', 'scan', 'xpath-console', 'resume', 'script-container',
+      'settings-panel', 'xpath-inputs'],
+    active: [],
+    inactive: ['xpath-console', 'settings', 'scan'],
+    enableSettings: false,
+    saveEnabled: false,
+  },
+  pause: {
+    show: ['resume', 'stop'],
+    hide: ['record', 'scan', 'xpath-console', 'pause', 'script-container',
+      'settings-panel', 'xpath-inputs'],
+    active: [],
+    inactive: [],
+    enableSettings: false,
+    saveEnabled: null, // don't change
+  },
+  stop: {
+    show: ['record', 'scan', 'xpath-console', 'status-field', 'script-container'],
+    hide: ['pause', 'resume', 'stop', 'xpath-inputs', 'settings-panel'],
+    active: [],
+    inactive: ['xpath-console', 'settings', 'scan'],
+    enableSettings: false,
+    saveEnabled: true,
+  },
+  save: {
+    show: ['record', 'scan', 'xpath-console', 'status-field', 'script-container'],
+    hide: ['pause', 'resume', 'stop', 'xpath-inputs', 'settings-panel'],
+    active: [],
+    inactive: ['xpath-console', 'settings', 'scan'],
+    enableSettings: false,
+    saveEnabled: true,
+  },
+  scan: {
+    show: ['record', 'scan', 'xpath-console', 'status-field', 'script-container'],
+    hide: ['pause', 'resume', 'stop', 'xpath-inputs', 'settings-panel'],
+    active: ['scan'],
+    inactive: ['xpath-console', 'settings'],
+    enableSettings: false,
+    saveEnabled: true,
+  },
+  settings: {
+    show: ['record', 'scan', 'xpath-console', 'settings-panel'],
+    hide: ['pause', 'resume', 'stop', 'script-container', 'xpath-inputs', 'status-field'],
+    active: ['settings'],
+    inactive: ['scan', 'xpath-console'],
+    enableSettings: true,
+    saveEnabled: null,
+  },
+  'xpath-console': {
+    show: ['record', 'scan', 'xpath-console', 'xpath-inputs', 'status-field'],
+    hide: ['pause', 'resume', 'stop', 'script-container', 'settings-panel'],
+    active: ['xpath-console'],
+    inactive: ['settings', 'scan'],
+    enableSettings: false,
+    saveEnabled: null,
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Helpers: port-closed error detection
+// ---------------------------------------------------------------------------
+const PORT_CLOSED_PATTERNS = [
+  'message port closed',
+  'The message port closed before a response was received',
+];
+
+function isPortClosedError(err) {
+  const msg = err && (err.message || JSON.stringify(err));
+  return msg && PORT_CLOSED_PATTERNS.some(p => msg.includes(p));
 }
-*/
-function analytics(_) {}
 
-// use centralized logger (imported above)
+// ---------------------------------------------------------------------------
+// DOM helpers
+// ---------------------------------------------------------------------------
 
 const copyStatus = (className) => {
   const copyButton = document.getElementById('copy');
@@ -53,23 +122,21 @@ const copyStatus = (className) => {
   setTimeout(() => { if (copyButton) copyButton.classList.remove(className); }, 3000);
 };
 
-/**
- * Copy script output to clipboard using native Clipboard API
- */
 async function copyToClipboard() {
   try {
     const scriptOutput = scriptLines.map(l => l.text).join('\n');
     await navigator.clipboard.writeText(scriptOutput);
     copyStatus('copy-ok');
-    analytics(['_trackEvent', 'copy', 'ok']);
   } catch (err) {
     copyStatus('copy-fail');
-    analytics(['_trackEvent', 'copy', 'nok']);
     logger.error('Copy failed:', err);
   }
 }
-/* eslint-disable no-use-before-define */
-// Helpers for line-based script model
+
+// ---------------------------------------------------------------------------
+// Line-based script model
+// ---------------------------------------------------------------------------
+
 function getTextFromScriptLines() {
   return scriptLines.map(l => l.text).join('\n');
 }
@@ -95,7 +162,6 @@ function addLine(afterIndex = scriptLines.length) {
   storage.set({ script: getTextFromScriptLines() });
   renderScriptLines();
 }
-/* eslint-enable no-use-before-define */
 
 function renderScriptLines() {
   const container = document.getElementById('script-lines');
@@ -113,7 +179,6 @@ function renderScriptLines() {
     const input = document.createElement('input');
     input.className = 'script-line-input';
     input.value = line.text;
-    // Make popup inputs read-only: editing happens in Actions-View
     input.readOnly = true;
 
     const controls = document.createElement('div');
@@ -149,16 +214,19 @@ function renderScriptLines() {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Display helpers
+// ---------------------------------------------------------------------------
+
 function updateValueByMessage(elementId, message) {
   if (message || message === '') {
-    const field = document.querySelector(elementId);
     if (elementId === '#script-output' || elementId === '#script-lines') {
-      // Set internal model and render
       const raw = message === null || message === undefined ? '' : message.toString();
       scriptLines = raw.split('\n').map(ln => ({ id: nextLineId++, text: ln }));
       renderScriptLines();
     } else {
-      field.innerText = message.toString();
+      const field = document.querySelector(elementId);
+      if (field) field.innerText = message.toString();
     }
   } else {
     logger.debug(`Tried to update value of ${elementId} by ${message}`);
@@ -168,17 +236,19 @@ function updateValueByMessage(elementId, message) {
 function displayScript(message) {
   updateValueByMessage('#script-lines', message);
 }
+
 function displayStatus(message) {
   updateValueByMessage('#status-field', message);
 }
 
-
 function show(ids, visible) {
-  const elements = ids.map(id => document.getElementById(id));
-
-  elements.forEach((elem) => {
-    if (elem) visible ? elem.classList.remove('hidden') : elem.classList.add('hidden');
-    else logger.debug('Tried to toggle visibility of non-existent element');
+  ids.forEach((id) => {
+    const elem = document.getElementById(id);
+    if (elem) {
+      visible ? elem.classList.remove('hidden') : elem.classList.add('hidden');
+    } else {
+      logger.debug('Tried to toggle visibility of non-existent element');
+    }
   });
 }
 
@@ -193,84 +263,73 @@ function enable(array, isEnabled) {
       logger.debug(`enable: element ${id} not found`);
       return;
     }
-    if (isEnabled) element.classList.remove('disabled'); else element.classList.add('disabled');
+    if (isEnabled) element.classList.remove('disabled');
+    else element.classList.add('disabled');
   });
 }
 
-function toggleHidden(id) {
-  const el = document.getElementById(id);
-  if (!el) {
-    logger.debug(`toggleHidden: element ${id} not found`);
-    return;
-  }
-  el.classList.toggle('hidden');
-}
-
-function setActive(id) {
-  const el = document.getElementById(id);
-  if (!el) {
-    logger.debug(`setActive: element ${id} not found`);
-    return;
-  }
-  el.classList.add('btn-active');
-}
-
-function setInactive(array) {
-  array.forEach((id) => {
+function setActive(ids) {
+  ids.forEach((id) => {
     const el = document.getElementById(id);
-    if (!el) {
-      logger.debug(`setInactive: element ${id} not found`);
-      return;
-    }
-    el.classList.remove('btn-active');
+    if (el) el.classList.add('btn-active');
   });
 }
+
+function setInactive(ids) {
+  ids.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('btn-active');
+  });
+}
+
+// ---------------------------------------------------------------------------
+// State machine: toggle()
+// ---------------------------------------------------------------------------
 
 function toggle(e) {
-  logger.debug(e.target.id);
-  // Hide all buttons by default and explicitly show buttons to show
-  // Except when the button is clear-script or copy (they do not change the "operating mode")
-  if (!['clear-script', 'copy'].includes(e.target.id)) {
-    hide(['record', 'scan', 'pause', 'xpath-console', 'resume', 'stop', 'script-container']);
-    enable(['settings-panel'], false);
+  const action = e.target.id;
+  logger.debug(action);
+
+  // clear-script and copy don't change operating mode
+  if (['clear-script', 'copy'].includes(action)) {
+    // Just handle save/copy enable state
+    if (action === 'clear-script') {
+      document.getElementById('save').disabled = true;
+      document.getElementById('copy').disabled = true;
+    }
+    return;
   }
 
-  if (e.target.id === 'pause') {
-    show(['resume', 'stop'], true);
-  } else if (e.target.id === 'resume' || e.target.id === 'record') {
-    show(['pause', 'stop', 'status-field'], true);
-    hide(['settings-panel', 'xpath-inputs'], true);
-    setInactive(['xpath-console', 'settings', 'scan']);
-  } else if (e.target.id === 'stop' || e.target.id === 'save') {
-    show(['record', 'scan', 'xpath-console', 'status-field', 'script-container'], true);
-    hide(['xpath-inputs', 'settings-panel'], true);
-    setInactive(['xpath-console', 'settings', 'scan']);
-  } else if (e.target.id === 'settings') {
-    show(['record', 'scan', 'xpath-console', 'settings-panel'], true);
-    hide(['script-container', 'xpath-inputs', 'status-field'], true);
-    setActive('settings');
-    setInactive(['scan', 'xpath-console']);
-  } else if (e.target.id === 'xpath-console') {
-    show(['record', 'scan', 'xpath-console', 'xpath-inputs', 'status-field'], true);
-    hide(['settings-panel']);
-    setInactive(['settings', 'scan']);
-    setActive('xpath-console');
-  } else if (e.target.id === 'scan') {
-    show(['record', 'scan', 'xpath-console', 'status-field', 'script-container'], true);
-    hide(['xpath-inputs', 'settings-panel'], true);
-    setActive('scan');
-    setInactive(['xpath-console', 'settings']);
+  const config = STATE_CONFIG[action];
+  if (!config) {
+    logger.debug(`toggle: no state config for "${action}"`);
+    return;
   }
 
-  if ((e.canSave === false) || (e.target.id === 'record') || (e.target.id === 'clear-script')) {
-    document.getElementById('save').disabled = true;
-    document.getElementById('copy').disabled = true;
-  } else if (e.target.id === 'scan' || e.target.id === 'stop') {
+  // Apply visibility
+  show(config.show, true);
+  hide(config.hide);
+
+  // Apply active/inactive button styles
+  setActive(config.active);
+  setInactive(config.inactive);
+
+  // Enable/disable settings panel
+  enable(['settings-panel'], config.enableSettings);
+
+  // Save/copy button state
+  if (config.saveEnabled === true) {
     document.getElementById('save').disabled = false;
     document.getElementById('copy').disabled = false;
+  } else if (config.saveEnabled === false) {
+    document.getElementById('save').disabled = true;
+    document.getElementById('copy').disabled = true;
   }
-  if (e.demo) { document.getElementById('demo').checked = e.demo === true; }
-  if (e.verify) { document.getElementById('verify').checked = e.verify === true; }
+  // null = don't change
+
+  // Apply extra state from the event object (settings, checkboxes, etc.)
+  if (e.demo) document.getElementById('demo').checked = e.demo === true;
+  if (e.verify) document.getElementById('verify').checked = e.verify === true;
 
   if (e.library_target) {
     const rfbrowserSelected = e.library_target === 'Browser';
@@ -284,9 +343,13 @@ function toggle(e) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Busy state
+// ---------------------------------------------------------------------------
+
 function busy(e) {
-  if ((e.isBusy === true) || (e.isBusy === false)) {
-    ['scan', 'record', 'stop', 'save', 'save', 'copy', 'resume'].forEach((id) => {
+  if (e.isBusy === true || e.isBusy === false) {
+    ['scan', 'record', 'stop', 'save', 'copy', 'resume'].forEach((id) => {
       const el = document.getElementById(id);
       if (!el) {
         logger.debug(`busy: element ${id} not found`);
@@ -297,115 +360,77 @@ function busy(e) {
   }
 }
 
-function runtimeSendMessage(message, retries = 3, delay = 500) {
-  return new Promise((resolve, reject) => {
-    const attempt = (retriesLeft) => {
-      host.runtime.sendMessage(message, (response) => {
-        if (host.runtime && host.runtime.lastError) {
-          const error = host.runtime.lastError;
-
-          // Retry on connection errors
-          if (retriesLeft > 0 && error.message.includes('message port closed')) {
-            logger.debug(`Retry (${retries - retriesLeft + 1}/${retries}):`, error.message);
-            setTimeout(() => attempt(retriesLeft - 1), delay);
-            return;
-          }
-
-          reject(error);
-        } else {
-          resolve(response);
-        }
-      });
-    };
-    attempt(retries - 1);
-  });
-}
-
+// ---------------------------------------------------------------------------
+// Messaging (native MV3 promises)
+// ---------------------------------------------------------------------------
 
 async function operation(e) {
   toggle(e);
   try {
-    const resp = await runtimeSendMessage({ operation: e.target.id });
-    // FIXME: change in displayStatus signature is reason why now status sometimes shows Object object.
-    // Go back to old signature or figure out other way around
+    const resp = await chrome.runtime.sendMessage({ operation: e.target.id });
     displayStatus(resp);
   } catch (err) {
-    const errorMsg = err && (err.message || JSON.stringify(err));
-    const portClosedPatterns = ['message port closed', 'The message port closed before a response was received'];
-    const isPortClosed = errorMsg && portClosedPatterns.some(p => errorMsg.includes(p));
-    if (isPortClosed) {
-      // Don't show this common service-worker disconnect error to the user.
-      // Log a warning with stack trace for debugging instead.
-      const stackOrErr = err && err.stack ? err.stack : err;
-      const warnMsg = `Runtime connection closed during operation ${e.target.id}:`;
-      logger.warn(warnMsg, stackOrErr);
+    if (isPortClosedError(err)) {
+      logger.warn(
+        `Runtime connection closed during operation ${e.target.id}:`,
+        err.stack || err
+      );
     } else {
+      const errorMsg = err && (err.message || JSON.stringify(err));
       logger.error(`operation error (${e.target.id}):`, errorMsg);
       displayStatus(`Error: ${errorMsg}`);
     }
   }
-  analytics(['_trackEvent', e.target.id, '^-^']);
 }
 
-async function xpathValidate(event) {
+async function xpathValidate() {
   const xpath = document.getElementById('textinput-xpath').value;
   try {
-    const response = await runtimeSendMessage({ operation: 'xpath-validate', xpath });
+    const response = await chrome.runtime.sendMessage({
+      operation: 'xpath-validate', xpath
+    });
     logger.info('XPath validation response:', response);
   } catch (err) {
-    const errorMsg = err && (err.message || JSON.stringify(err));
-    const portClosedPatterns = ['message port closed', 'The message port closed before a response was received'];
-    const isPortClosed = errorMsg && portClosedPatterns.some(p => errorMsg.includes(p));
-    if (isPortClosed) {
-      const stackOrErr = err && err.stack ? err.stack : err;
-      logger.warn('Runtime connection closed during xpath-validate:', stackOrErr);
+    if (isPortClosedError(err)) {
+      logger.warn('Runtime connection closed during xpath-validate:', err.stack || err);
     } else {
-      logger.error('xpath-validate error:', errorMsg);
+      logger.error('xpath-validate error:', err.message || err);
     }
   }
 }
 
-async function updateSettings(e) {
+async function updateSettings(_e) {
   const demo = document.getElementById('demo').checked;
   const verify = document.getElementById('verify').checked;
   const rfbrowserRadio = document.getElementById('target_rfbrowser');
   const rpaSyntax = document.getElementById('syntax_rpa');
-  const target = rfbrowserRadio.checked
-    ? 'Browser'
-    : 'SeleniumLibrary';
-  const syntax = rpaSyntax.checked
-    ? 'rpa'
-    : 'testing';
+  const target = rfbrowserRadio.checked ? 'Browser' : 'SeleniumLibrary';
+  const syntax = rpaSyntax.checked ? 'rpa' : 'testing';
 
   try {
-    const response = await runtimeSendMessage({
+    const response = await chrome.runtime.sendMessage({
       operation: 'settings', demo, verify, target, syntax
     });
     logger.info('Settings updated:', response);
   } catch (err) {
-    const errorMsg = err && (err.message || JSON.stringify(err));
-    const portClosedPatterns = ['message port closed', 'The message port closed before a response was received'];
-    const isPortClosed = errorMsg && portClosedPatterns.some(p => errorMsg.includes(p));
-    if (isPortClosed) {
-      const stackOrErr = err && err.stack ? err.stack : err;
-      logger.warn('Runtime connection closed during settings update:', stackOrErr);
+    if (isPortClosedError(err)) {
+      logger.warn('Runtime connection closed during settings update:', err.stack || err);
     } else {
-      logger.error('settings error:', errorMsg);
+      logger.error('settings error:', err.message || err);
     }
   }
-
-  analytics(['_trackEvent', 'setting', e.target.id]);
 }
 
-function info(e) {
+function info() {
   if (introTour) {
     introTour.toggle();
   }
 }
 
-/**
- * Update all UI elements with translations for the given language
- */
+// ---------------------------------------------------------------------------
+// Translations
+// ---------------------------------------------------------------------------
+
 function updateUITranslations(language) {
   // Buttons
   document.getElementById('record').textContent = t('record', language);
@@ -417,7 +442,7 @@ function updateUITranslations(language) {
   document.getElementById('copy').textContent = t('copy', language);
   document.getElementById('save').textContent = t('download', language);
   document.getElementById('clear-script').textContent = t('clear', language);
-  // Add-line button
+
   const addBtn = document.getElementById('add-line');
   if (addBtn) {
     addBtn.textContent = t('addLine', language);
@@ -459,20 +484,19 @@ function updateUITranslations(language) {
   document.getElementById('verify-label').textContent = t('checkPageContains', language);
 }
 
-/**
- * Handle language change
- */
 async function changeLanguage(e) {
   const newLanguage = e.target.value;
   currentLanguage = newLanguage;
   setLanguage(newLanguage);
   updateUITranslations(newLanguage);
-  analytics(['_trackEvent', 'language', newLanguage]);
 }
+
+// ---------------------------------------------------------------------------
+// Initialization
+// ---------------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    // Load current language
     currentLanguage = await getCurrentLanguage();
 
     const state = await storage.get({
@@ -488,7 +512,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       script: '',
     });
 
-    // Update default message with translation
     if (state.message === 'Record or Scan') {
       state.message = t('recordOrScan', currentLanguage);
     }
@@ -496,15 +519,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     displayStatus(state.message);
     displayScript(state.script);
 
-    // Update UI translations
     updateUITranslations(currentLanguage);
 
-    // Set language radio button
     document.getElementById(`lang_${currentLanguage}`).checked = true;
 
-    // Prevent showing settings panel automatically on load if persisted as 'settings'
+    // Prevent showing settings panel automatically on load
     const initialOperation = state.operation === 'settings' ? 'idle' : state.operation;
-    // FIXME: rename target to current operation and toggle's first param to `state` instead of `e`
     toggle({
       target: { id: initialOperation },
       canSave: state.canSave,
@@ -518,23 +538,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Ensure settings panel is hidden on initial load regardless
     hide(['settings-panel']);
 
-    debug ? document.getElementById('textarea-log').classList.remove('hidden') : 0;
+    if (debug) document.getElementById('textarea-log').classList.remove('hidden');
 
     [
-      'record',
-      'resume',
-      'stop',
-      'pause',
-      'save',
-      'scan',
-      'xpath-console',
-      'settings',
-      'clear-script',
+      'record', 'resume', 'stop', 'pause', 'save', 'scan',
+      'xpath-console', 'settings', 'clear-script',
     ].forEach((id) => {
       document.getElementById(id).addEventListener('click', operation);
     });
 
-    // Copy button uses native clipboard API
     document.getElementById('copy').addEventListener('click', copyToClipboard);
 
     ['demo', 'verify'].forEach((id) => {
@@ -546,22 +558,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         .forEach(elem => elem.addEventListener('change', updateSettings));
     });
 
-    // Language change event listener
     Array.from(document.getElementsByClassName('language-option'))
       .forEach(elem => elem.addEventListener('change', changeLanguage));
 
     document.getElementById('textinput-xpath').addEventListener('input', xpathValidate);
 
-    // Add-line button
     const addBtn = document.getElementById('add-line');
     if (addBtn) addBtn.addEventListener('click', () => addLine());
-    // external window option removed; keep editor inside popup
 
-    // Initialize intro tour
     introTour = new IntroTour();
     introTour.init();
 
     document.getElementById('info').addEventListener('click', info);
+
     const openActionsBtn = document.getElementById('open-actions-view');
     if (openActionsBtn) {
       openActionsBtn.addEventListener('click', () => {
@@ -577,14 +586,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 }, false);
 
-host.storage.onChanged.addListener((changes, _) => {
+chrome.storage.onChanged.addListener((changes) => {
   logger.debug('Localstorage event, changes: ', changes);
   for (const key in changes) {
     const newValue = changes[key].newValue;
     if (key === 'isBusy') busy({ isBusy: newValue });
     if (key === 'message') displayStatus(newValue);
-    if (key === 'script') {
-      displayScript(newValue || '');
-    }
+    if (key === 'script') displayScript(newValue || '');
   }
 });

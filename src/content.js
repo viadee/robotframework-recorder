@@ -28,11 +28,11 @@ function handleByChange(type) {
 const debug = false;
 const logger = debug ? {
   debug: (data) => {
-    /* eslint-disable-next-line no-console */
+     
     console.debug(data);
   },
   error: (data) => {
-    /* eslint-disable-next-line no-console */
+     
     console.error(data);
   }
 } : {

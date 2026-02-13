@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <script src="./translations.js"></script>
-  <script src="./options.js"></script>
-  <link async rel="stylesheet" type="text/css" href="../assets/style.css">
-  <link async rel="stylesheet" type="text/css" href="../assets/options.css">
+  <meta charset="utf-8">
+  <title>RobotFramework Recorder - Options</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../assets/theme.css">
+  <link rel="stylesheet" type="text/css" href="../assets/style.css">
+  <link rel="stylesheet" type="text/css" href="../assets/options.css">
 </head>
 <body>
 <div class="panel-options">
@@ -24,11 +28,13 @@
       <h1 id="custom-locators-heading">Custom Locators</h1>
       <div id="hint">Add your own flavoured locators! Separate with a commas.</div>
     </div>
-    <input type="text" id="custom-locators"/>
+    <input type="text" id="custom-locators">
     <button class="btn btn-wide" id="reset">Reset</button>
     <button class="btn btn-wide" id="update">Update</button>
   </div>
 </div>
+
+<script type="module" src="options.js"></script>
 </body>
 
 </html>

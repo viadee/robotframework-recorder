@@ -1,11 +1,9 @@
-/* global document */
-
 /**
  * Modern lightweight intro/tutorial system
  * Replaces ChardinJS with a minimal, modern implementation
  */
 
-class IntroTour {
+export class IntroTour {
   constructor() {
     this.isActive = false;
     this.currentStep = 0;
@@ -70,8 +68,6 @@ class IntroTour {
     const step = this.steps[index];
     const rect = step.element.getBoundingClientRect();
 
-    // Update overlay
-    // build box-shadow in parts to avoid long lines (ESLint max-len)
     const outerShadow = '0 0 0 9999px rgba(0, 0, 0, 0.7)';
     const innerShadow = 'inset 0 0 0 1px rgba(0, 192, 181, 0.3)';
     this.overlay.style.boxShadow = `${outerShadow}, ${innerShadow}`;
@@ -81,11 +77,9 @@ class IntroTour {
     this.overlay.style.height = `${rect.height}px`;
     this.overlay.style.borderRadius = '4px';
 
-    // Update tooltip
     this._positionTooltip(step, rect);
     this.tooltip.querySelector('.intro-text').textContent = step.intro;
 
-    // Update button text
     const nextBtn = this.tooltip.querySelector('.intro-next');
     nextBtn.textContent = index === this.steps.length - 1 ? '✓ Done' : 'Next ›';
   }
@@ -95,8 +89,7 @@ class IntroTour {
    */
   _positionTooltip(step, rect) {
     const padding = 12;
-    let top; let
-      left;
+    let top; let left;
     const tooltipWidth = 280;
     const tooltipHeight = 100;
 
@@ -138,7 +131,6 @@ class IntroTour {
    * Create UI elements (overlay and tooltip)
    */
   _createUI() {
-    // Overlay
     this.overlay = document.createElement('div');
     this.overlay.className = 'intro-overlay';
     this.overlay.style.cssText = `
@@ -150,7 +142,6 @@ class IntroTour {
     `;
     document.body.appendChild(this.overlay);
 
-    // Tooltip
     this.tooltip = document.createElement('div');
     this.tooltip.className = 'intro-tooltip';
     this.tooltip.style.cssText = `
@@ -167,7 +158,6 @@ class IntroTour {
       border-left: 4px solid #00c0b5;
     `;
 
-    // Build tooltip content programmatically to satisfy max-len rule
     const introText = document.createElement('div');
     introText.className = 'intro-text';
     introText.style.cssText = 'margin-bottom: 12px; color: #333;';
@@ -178,7 +168,6 @@ class IntroTour {
     const skipBtn = document.createElement('button');
     skipBtn.className = 'intro-skip';
     skipBtn.textContent = 'Skip';
-    // set styles individually to avoid long lines
     skipBtn.style.padding = '4px 12px';
     skipBtn.style.border = 'none';
     skipBtn.style.background = '#f0f0f0';
@@ -206,7 +195,6 @@ class IntroTour {
 
     document.body.appendChild(this.tooltip);
 
-    // Event listeners
     this.overlay.addEventListener('click', () => this.stop());
     this.tooltip.querySelector('.intro-skip').addEventListener('click', () => this.stop());
     this.tooltip.querySelector('.intro-next').addEventListener('click', () => {
@@ -218,7 +206,6 @@ class IntroTour {
       }
     });
 
-    // Keyboard support
     this._keyHandler = (e) => {
       if (!this.isActive) return;
       if (e.key === 'Escape') this.stop();
@@ -254,9 +241,4 @@ class IntroTour {
       document.removeEventListener('keydown', this._keyHandler);
     }
   }
-}
-
-// Export for use
-if (typeof exports !== 'undefined') {
-  exports.IntroTour = IntroTour;
 }

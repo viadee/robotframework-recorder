@@ -437,8 +437,9 @@ function updateUITranslations(language) {
   document.getElementById('stop').textContent = t('stop', language);
   document.getElementById('resume').textContent = t('resume', language);
   document.getElementById('pause').textContent = t('pause', language);
-  document.getElementById('scan').textContent = t('scanPage', language);
-  document.getElementById('xpath-console').textContent = t('validateXPath', language);
+  // scan and xpath-console are icon-only buttons — set title, not textContent
+  document.getElementById('scan').title = t('scanPage', language);
+  document.getElementById('xpath-console').title = t('validateXPath', language);
   document.getElementById('copy').textContent = t('copy', language);
   document.getElementById('save').textContent = t('download', language);
   document.getElementById('clear-script').textContent = t('clear', language);
@@ -454,8 +455,7 @@ function updateUITranslations(language) {
   document.getElementById('stop').title = t('stopTitle', language);
   document.getElementById('resume').title = t('resumeTitle', language);
   document.getElementById('pause').title = t('pauseTitle', language);
-  document.getElementById('scan').title = t('scanPageTitle', language);
-  document.getElementById('xpath-console').title = t('validateXPathTitle', language);
+  // scan/xpath-console titles already set above
   document.getElementById('info').title = t('infoTitle', language);
   document.getElementById('settings').title = t('settingsTitle', language);
   document.getElementById('copy').title = t('copyTitle', language);

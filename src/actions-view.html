@@ -5,27 +5,27 @@
   <title>Recorder - Actions Viewer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="../assets/theme.css">
   <link rel="stylesheet" type="text/css" href="../assets/style.css">
 </head>
 
-<body class="container actions-view">
+<body class="container actions-view" style="width: auto; max-width: 900px; padding: var(--sp-4);">
   <div class="padding">
-  <h2 id="actions-heading">Aufgenommene Aktionen</h2>
+    <h2 id="actions-heading" style="font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.02em; margin: 0;">Aufgenommene Aktionen</h2>
     <div class="pad">
       <div id="status-field"></div>
     </div>
 
-    <div id="actions-controls" class="pad">
+    <div id="actions-controls" class="pad" style="display: flex; gap: var(--sp-2); flex-wrap: wrap;">
       <button class="btn btn-wide" id="refresh">Refresh</button>
       <button class="btn btn-wide" id="export-robot">Export .robot</button>
       <button class="btn btn-wide" id="export-json">Export JSON</button>
       <button class="btn btn-wide" id="copy-script">Copy Script</button>
-      <button class="btn btn-wide" id="clear-script">Clear</button>
+      <button class="btn btn-wide btn-danger" id="clear-script">Clear</button>
     </div>
 
-    <div id="actions-list" class="pad" style="max-height:60vh; overflow:auto; padding:12px; border-radius:4px;">
+    <div id="actions-list" class="pad" style="max-height:60vh; overflow:auto; padding:var(--sp-4); border-radius:var(--radius-lg);">
       <!-- actions will be rendered here -->
     </div>
   </div>

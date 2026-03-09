@@ -1,11 +1,5 @@
 /* ============================================================
-   style.css — Popup styles
-   ============================================================
-   NOTE: Google Fonts are loaded via <link> in popup.html.
-   The recommended pattern is:
-     <link rel="preconnect" href="https://fonts.googleapis.com">
-     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+   style.css — Popup styles (Modern redesign)
    ============================================================ */
 
 /* ── Icon mappings (unchanged for JS compat) ── */
@@ -30,66 +24,146 @@
 #settings::before        { background-image: url("icon-settings.svg"); }
 #open-actions-view::before { background-image: url("clipboard.svg"); }
 #info::before            { background-image: url("icon-info.svg"); }
-#xpath-console::before   { width: 0px; }
+#xpath-console::before   { background-image: url("icon-xpath.svg"); }
+#templates-btn::before   { background-image: url("icon-template.svg"); }
+#undo::before,
+#redo::before            { width: 0px; }
 #update::before          { background-image: url("btn-update.svg"); }
 #reset::before           { background-image: url("btn-reset.svg"); }
 
 /* ── Layout ── */
 
 .container {
-  width: min(400px, 96vw);
+  width: 420px;
+  min-width: 420px;
   text-align: left;
-  padding: var(--sp-3);
+  padding: 0;
 }
+
+/* ── Header ── */
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.popup-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.popup-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-title {
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.popup-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+/* ── Status Bar ── */
+
+.status-bar {
+  padding: var(--sp-2) var(--sp-4);
+  min-height: 28px;
+}
+
+#status-field {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* ── Actions Group ── */
+
+.actions-group {
+  padding: 0 var(--sp-4) var(--sp-3);
+}
+
+.actions-primary {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.actions-secondary {
+  display: flex;
+  gap: var(--sp-1);
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* ── Legacy layout compat ── */
 
 .padding {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
   align-items: center;
+  padding: var(--sp-3) var(--sp-4);
 }
 
 .pad {
   min-width: 100%;
-  margin: var(--sp-3) 0;
+  margin: 0 0 var(--sp-3);
+  padding: 0 var(--sp-4);
 }
 
 .horizontal-pad {
   min-width: 80%;
-  margin: var(--sp-2) 0;
+  margin: var(--sp-2) var(--sp-4);
 }
 
-/* ── Buttons ── */
+/* ── Buttons — Base ── */
 
 button {
   font-family: var(--font-sans);
   font-weight: 500;
   font-size: var(--text-sm);
-  color: var(--brand-500);
+  color: var(--text-primary);
   background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  padding: var(--sp-2) var(--sp-4);
+  padding: var(--sp-2) var(--sp-3);
   margin: 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   line-height: 1.2;
   cursor: pointer;
   user-select: none;
   gap: var(--sp-1);
+  white-space: nowrap;
 }
 
 button::before {
   display: inline-block;
-  height: 18px;
-  width: 18px;
+  height: 16px;
+  width: 16px;
   content: "";
   flex-shrink: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 button:hover {
-  background: var(--brand-100);
-  border-color: var(--brand-500);
+  background: var(--bg-elevated);
+  border-color: var(--border-default);
   box-shadow: var(--shadow-sm);
 }
 
@@ -101,22 +175,47 @@ button:active {
 button:disabled {
   color: var(--text-muted);
   border-color: var(--border-subtle);
-  background: var(--bg-surface);
+  background: var(--bg-page);
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 button:disabled:hover {
-  background: var(--bg-surface);
+  background: var(--bg-page);
   border-color: var(--border-subtle);
   box-shadow: none;
   transform: none;
 }
 
 .btn-wide::before {
-  margin-right: var(--sp-2);
+  margin-right: var(--sp-1);
 }
 
+/* ── Icon-only header buttons ── */
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon::before {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-icon:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+
+/* ── btn-thin — legacy compat ── */
 .btn-thin {
   float: right;
   padding: var(--sp-2);
@@ -126,12 +225,124 @@ button:disabled:hover {
   margin-right: 0 !important;
 }
 
-.btn-active {
-  background: var(--brand-100) !important;
+/* ── Record button — Red/prominent ── */
+
+.btn-record {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+  font-weight: 600;
+}
+
+.btn-record:hover {
+  background: #DC2626;
+  border-color: #DC2626;
+  box-shadow: 0 2px 8px rgba(239,68,68,0.3);
+}
+
+.btn-record:disabled {
+  background: var(--bg-page);
+  color: var(--text-muted);
+  border-color: var(--border-subtle);
+  box-shadow: none;
+}
+
+/* ── Stop button — Dark filled ── */
+
+.btn-stop {
+  background: var(--text-primary);
+  color: var(--bg-page);
+  border-color: var(--text-primary);
+  font-weight: 600;
+}
+
+.btn-stop:hover {
+  opacity: 0.85;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-stop:disabled {
+  background: var(--bg-page);
+  color: var(--text-muted);
+  border-color: var(--border-subtle);
+  opacity: 0.5;
+}
+
+/* ── Secondary buttons ── */
+
+.btn-secondary {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-elevated);
+  border-color: var(--brand-500);
+}
+
+/* ── Ghost buttons (tertiary) ── */
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  font-size: var(--text-xs);
+  padding: var(--sp-1) var(--sp-2);
+}
+
+.btn-ghost::before {
+  height: 14px;
+  width: 14px;
+}
+
+.btn-ghost:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+/* ── Icon-only small buttons (secondary toolbar) ── */
+
+.btn-icon-sm {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.btn-icon-sm::before {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-icon-sm:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.btn-icon-sm.btn-active {
+  background: var(--brand-50) !important;
   border-color: var(--brand-500) !important;
 }
 
-/* Context buttons (inside code container) */
+/* ── Active state ── */
+
+.btn-active {
+  background: var(--brand-50) !important;
+  border-color: var(--brand-500) !important;
+  color: var(--brand-600) !important;
+}
+
+/* ── Context buttons (code bar) ── */
+
 .btn-context {
   background: transparent;
   font-weight: 400;
@@ -144,8 +355,8 @@ button:disabled:hover {
 }
 
 .btn-context::before {
-  height: 16px;
-  width: 16px;
+  height: 14px;
+  width: 14px;
   margin-right: var(--sp-1);
 }
 
@@ -158,7 +369,7 @@ button:disabled:hover {
 .btn-context:disabled {
   color: var(--text-muted);
   border-color: transparent;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .btn-context:disabled:hover {
@@ -175,20 +386,16 @@ button.copy-ok:hover {
   background-color: transparent;
 }
 
-/* ── Status ── */
-
-#status-field {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
-}
-
-/* ── Script container ── */
+/* ── Script container — VS Code-like ── */
 
 #script-container {
   background: var(--bg-code);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   overflow: hidden;
+  margin: 0 var(--sp-4) var(--sp-3);
+  padding: 0;
+  width: 388px;
 }
 
 #script-container-lines {
@@ -198,42 +405,45 @@ button.copy-ok:hover {
 #script-lines {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-1);
-  max-height: 380px;
+  gap: 2px;
+  max-height: 340px;
   overflow: auto;
   padding-right: var(--sp-2);
 }
 
-/* Scrollbar styling for code area */
+/* Scrollbar */
 #script-lines::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 #script-lines::-webkit-scrollbar-track {
   background: transparent;
 }
 #script-lines::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.1);
   border-radius: 3px;
+}
+#script-lines::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.18);
 }
 
 .script-line-row {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  background: rgba(255,255,255,0.025);
-  padding: var(--sp-1) var(--sp-2);
+  background: transparent;
+  padding: 2px var(--sp-2);
   border-radius: var(--radius-sm);
   transition: background-color var(--duration-fast) var(--ease);
 }
 
 .script-line-row:hover {
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.04);
 }
 
 .script-line-index {
-  min-width: 28px;
+  min-width: 24px;
   text-align: right;
-  color: var(--text-muted);
+  color: rgba(255,255,255,0.2);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   user-select: none;
@@ -243,17 +453,18 @@ button.copy-ok:hover {
   flex: 1 1 auto;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  padding: var(--sp-1) var(--sp-2);
+  padding: 3px var(--sp-2);
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(0,0,0,0.25);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--text-on-code);
   outline: none;
 }
 
 .script-line-input:focus {
-  border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: rgba(0, 145, 255, 0.5);
+  background: rgba(0,0,0,0.3);
+  box-shadow: 0 0 0 2px var(--brand-glow);
 }
 
 .script-line-controls {
@@ -271,8 +482,8 @@ button.copy-ok:hover {
 /* Icon-only small buttons */
 .icon-btn {
   padding: var(--sp-1);
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -284,15 +495,15 @@ button.copy-ok:hover {
 .icon-btn::before {
   content: '';
   display: inline-block;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 16px 16px;
+  background-size: 14px 14px;
 }
 
 .icon-btn:hover {
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.06);
   border-color: rgba(255,255,255,0.08);
 }
 
@@ -313,12 +524,14 @@ button.copy-ok:hover {
   background: var(--danger-bg);
 }
 
+/* Script actions bar */
 #script-actions {
   background: var(--bg-code-bar);
   padding: var(--sp-2) var(--sp-3);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 #script-container pre {
@@ -343,31 +556,40 @@ button.copy-ok:hover {
 /* ── Settings panel ── */
 
 #settings-panel {
-  display: inline-grid;
-  font-size: var(--text-base);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  padding: var(--sp-3) var(--sp-4);
-  margin-top: var(--sp-2);
+  display: block;
+  font-size: var(--text-sm);
+  margin: 0 var(--sp-4) var(--sp-3);
   animation: slideDown var(--duration-norm) var(--ease);
 }
 
+.settings-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-2);
+}
+
+.settings-card:last-child {
+  margin-bottom: 0;
+}
+
 h3 {
-  margin: var(--sp-4) 0 var(--sp-3);
-  font-size: var(--text-base);
+  margin: 0 0 var(--sp-2);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .panel-row {
-  margin-bottom: var(--sp-3);
+  margin-bottom: 0;
 }
 
 .toggle {
   display: flex;
   align-items: baseline;
-  margin-bottom: var(--sp-2);
+  margin-bottom: var(--sp-1);
 }
 
 .toggle-last {
@@ -378,6 +600,7 @@ h3 {
   line-height: 1.4;
   color: var(--text-secondary);
   cursor: pointer;
+  font-size: var(--text-xs);
 }
 
 input[type="checkbox"],
@@ -385,18 +608,20 @@ input[type="radio"] {
   margin: 0 var(--sp-2) var(--sp-1) 0;
   vertical-align: middle;
   accent-color: var(--brand-500);
+  width: 14px;
+  height: 14px;
 }
 
 /* ── Text input ── */
 
 input[type="text"] {
   font-family: var(--font-mono);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-default);
   background: var(--bg-input);
   color: var(--text-primary);
-  height: 32px;
-  padding: var(--sp-1) var(--sp-2);
+  height: 34px;
+  padding: var(--sp-1) var(--sp-3);
   font-size: var(--text-sm);
 }
 
@@ -410,6 +635,7 @@ input[type="text"]:focus {
 
 #xpath-inputs {
   animation: slideDown var(--duration-norm) var(--ease);
+  padding: 0 var(--sp-4);
 }
 
 /* ── Textarea log ── */
@@ -527,6 +753,7 @@ img {
 
 .actions-view #script-container {
   background-color: transparent;
+  margin: 0;
 }
 
 .actions-view .script-line-row {
@@ -549,8 +776,8 @@ img {
 }
 
 .actions-view .icon-btn:hover {
-  background: rgba(108,80,250,0.06);
-  border-color: rgba(108,80,250,0.12);
+  background: rgba(0,145,255,0.06);
+  border-color: rgba(0,145,255,0.12);
 }
 
 .actions-view #script-actions {
@@ -620,8 +847,8 @@ img {
 }
 
 .actions-view .av-icon-btn:hover {
-  background: rgba(108,80,250,0.06);
-  border-color: rgba(108,80,250,0.12);
+  background: rgba(0,145,255,0.06);
+  border-color: rgba(0,145,255,0.12);
 }
 
 .actions-view .av-icon-btn::before {
@@ -647,19 +874,19 @@ img {
   align-items: center;
 }
 
-/* ── Drag handle hint (for future drag-and-drop) ── */
+/* ── Drag handle ── */
 .drag-handle {
   cursor: grab;
   color: var(--text-muted);
   font-size: var(--text-sm);
   padding: var(--sp-1);
   user-select: none;
-  opacity: 0.4;
+  opacity: 0.3;
   transition: opacity var(--duration-fast) var(--ease);
 }
 
 .drag-handle:hover {
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 .drag-handle::before {
@@ -669,10 +896,25 @@ img {
 /* ── Scanning spinner state ── */
 #scan.scanning::before {
   background-image: none;
-  border: 2px solid rgba(108,80,250,0.2);
+  border: 2px solid rgba(0,145,255,0.2);
   border-top-color: var(--brand-500);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Auto-save indicator ── */
+
+.auto-save-indicator {
+  font-size: 11px;
+  color: var(--text-tertiary, #888);
+  padding: 2px 8px;
+  text-align: right;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.auto-save-indicator.visible {
+  opacity: 1;
 }

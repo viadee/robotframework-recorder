@@ -6,16 +6,26 @@
   <title>RobotFramework Recorder - Options</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="../assets/theme.css">
   <link rel="stylesheet" type="text/css" href="../assets/style.css">
   <link rel="stylesheet" type="text/css" href="../assets/options.css">
 </head>
 <body>
 <div class="panel-options">
-  <div class="grid-container">
+  <div class="options-header">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect width="22" height="22" rx="6" fill="var(--brand-500)"/>
+      <circle cx="8" cy="8" r="2" fill="white" opacity="0.9"/>
+      <circle cx="14" cy="8" r="2" fill="white" opacity="0.9"/>
+      <rect x="7" y="13" width="8" height="2" rx="1" fill="white" opacity="0.9"/>
+    </svg>
+    <h1 class="options-title">RF Recorder Options</h1>
+  </div>
+
+  <div class="options-card">
     <div class="heading">
-      <h1 id="language-label">Language</h1>
+      <h2 id="language-label">Language</h2>
       <div id="language-hint">
         <input type="radio" class="language-option" id="lang_en" name="language" value="en">
         <label for="lang_en">English</label>
@@ -23,14 +33,18 @@
         <label for="lang_de">Deutsch</label>
       </div>
     </div>
-    <hr>
+  </div>
+
+  <div class="options-card">
     <div class="heading">
-      <h1 id="custom-locators-heading">Custom Locators</h1>
+      <h2 id="custom-locators-heading">Custom Locators</h2>
       <div id="hint">Add your own flavoured locators! Separate with a commas.</div>
     </div>
     <input type="text" id="custom-locators">
-    <button class="btn btn-wide" id="reset">Reset</button>
-    <button class="btn btn-wide" id="update">Update</button>
+    <div class="options-actions">
+      <button class="btn btn-wide" id="reset">Reset</button>
+      <button class="btn btn-wide btn-primary-action" id="update">Update</button>
+    </div>
   </div>
 </div>
 

@@ -39,7 +39,7 @@
     "128": "assets/mark-128.png",
     "256": "assets/mark-256.png"
   },
-  "permissions": ["downloads", "storage", "scripting", "tabs", "sidePanel"],
+  "permissions": ["downloads", "storage", "scripting", "tabs", "sidePanel", "contextMenus"],
   "host_permissions": [
     "<all_urls>"
   ]

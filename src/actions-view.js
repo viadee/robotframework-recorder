@@ -439,6 +439,134 @@ async function clearScript() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Extract Keyword — select lines → wrap in a new keyword
+// ---------------------------------------------------------------------------
+
+async function extractKeyword() {
+  const res = await storage.get({ script: '', target: 'Browser' });
+  const script = res.script || '';
+  if (!script.trim()) {
+    displayStatus('No script to extract from');
+    return;
+  }
+
+  const lines = script.split('\n');
+  const actionLines = lines.filter(l => l.trim().length > 0);
+  if (actionLines.length === 0) {
+    displayStatus('No actions to extract');
+    return;
+  }
+
+  // Prompt for keyword name
+  const kwName = window.prompt(
+    'Name for the new keyword:',
+    'My Custom Keyword'
+  );
+  if (!kwName) return;
+
+  // Detect variables used (${...}) to make them arguments
+  const varPattern = /\$\{([^}]+)\}/g;
+  const varsUsed = new Set();
+  for (const line of actionLines) {
+    let match;
+    while ((match = varPattern.exec(line)) !== null) {
+      varsUsed.add(match[1]);
+    }
+  }
+
+  // Build keyword definition
+  const kwLines = [`${kwName}`];
+  if (varsUsed.size > 0) {
+    const argLine = '    [Arguments]    '
+      + [...varsUsed].map(v => `\${${v}}`).join('    ');
+    kwLines.push(argLine);
+  }
+  kwLines.push(
+    ...actionLines.map(l => '    ' + l.replace(/^\s+/, ''))
+  );
+
+  // Build resource file content
+  const resourceContent = [
+    '*** Keywords ***',
+    ...kwLines,
+  ].join('\n');
+
+  // Store the keyword definition
+  const existing = await storage.get({ keywords: [] });
+  const keywords = existing.keywords || [];
+  keywords.push({
+    name: kwName,
+    lines: kwLines,
+    args: [...varsUsed],
+    created: new Date().toISOString(),
+  });
+  await storage.set({ keywords });
+
+  // Replace the script with a call to the new keyword
+  const callLine = varsUsed.size > 0
+    ? '    ' + kwName + '    '
+      + [...varsUsed].map(v => `\${${v}}`).join('    ')
+    : '    ' + kwName;
+  await storage.set({ script: callLine });
+
+  displayStatus(`Extracted keyword: ${kwName}`);
+
+  // Offer download of the resource file
+  downloadBlob(
+    resourceContent,
+    `${kwName.replace(/\s+/g, '_').toLowerCase()}.resource`,
+    'text/plain;charset=utf-8'
+  );
+
+  await loadActions();
+}
+
+// ---------------------------------------------------------------------------
+// Export as .resource library file
+// ---------------------------------------------------------------------------
+
+async function exportResource() {
+  const res = await storage.get({
+    script: '', keywords: [], target: 'Browser',
+  });
+  const script = res.script || '';
+  const keywords = res.keywords || [];
+  const library = res.target || 'Browser';
+
+  const lines = [
+    '*** Settings ***',
+    `Library           ${library}`,
+    '',
+    '*** Keywords ***',
+  ];
+
+  // Add stored custom keywords
+  for (const kw of keywords) {
+    lines.push(...kw.lines);
+    lines.push('');
+  }
+
+  // If current script has content, add it as "Recorded Actions"
+  if (script.trim()) {
+    lines.push('Recorded Actions');
+    const scriptLines = script.split('\n');
+    for (const sl of scriptLines) {
+      if (sl.trim()) {
+        lines.push('    ' + sl.replace(/^\s+/, ''));
+      }
+    }
+  }
+
+  const content = lines.join('\n');
+  downloadBlob(
+    content,
+    'keywords.resource',
+    'text/plain;charset=utf-8'
+  );
+  displayStatus('Exported as .resource library');
+}
+
 function init() {
   // initialize language then wire UI text and handlers
   initLanguage().then(() => {
@@ -467,6 +595,18 @@ function init() {
       if (script) copyToClipboard(script);
     });
     document.getElementById('clear-script').addEventListener('click', () => clearScript());
+
+    // Extract keyword & export resource
+    const extractBtn = document.getElementById('extract-keyword');
+    if (extractBtn) {
+      extractBtn.textContent = t('extractKeyword', currentLanguage);
+      extractBtn.addEventListener('click', () => extractKeyword());
+    }
+    const exportResBtn = document.getElementById('export-resource');
+    if (exportResBtn) {
+      exportResBtn.textContent = t('exportResource', currentLanguage);
+      exportResBtn.addEventListener('click', () => exportResource());
+    }
 
     // Initial load
     loadActions();

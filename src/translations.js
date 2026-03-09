@@ -76,6 +76,10 @@ const translations = {
     pageTitle: 'Recorder - Actions Viewer',
     actionsHeading: 'Recorded actions',
     actionsListPlaceholder: 'Actions will appear here',
+    // Extract & Resource
+    extractKeyword: 'Extract Keyword',
+    exportResource: 'Export .resource',
+    deleteThisLine: 'Delete this line',
     // Popup specific
     addLine: 'Add line',
     addLineTitle: 'Add new line'
@@ -153,6 +157,10 @@ const translations = {
     noScriptGenerated: 'Kein Script generiert',
     exportStarted: 'Export gestartet',
     exportFailed: 'Export fehlgeschlagen',
+    // Extract & Resource
+    extractKeyword: 'Keyword extrahieren',
+    exportResource: 'Export .resource',
+    deleteThisLine: 'Diese Zeile löschen',
     // Page labels
     pageTitle: 'Recorder - Aktionen',
     actionsHeading: 'Aufgenommene Aktionen',

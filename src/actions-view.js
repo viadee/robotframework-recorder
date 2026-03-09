@@ -1,8 +1,7 @@
-/* global chrome t getCurrentLanguage */
+/* global chrome */
 
 import logger from './logger.js';
-// filename available from constants if needed for download features
-// import { filename } from './constants.js';
+import { t, getCurrentLanguage } from './translations.js';
 import { initializeTranslator } from './translator/robot-translator.js';
 
 const storage = chrome.storage.local;
@@ -326,19 +325,17 @@ async function loadActions() {
   }
 }
 
-// React to external storage changes so popup and other pages stay in sync
-if (storage && storage.onChanged && typeof storage.onChanged.addListener === 'function') {
-  storage.onChanged.addListener((changes, area) => {
-    // only respond to local storage changes
-    if (area !== 'local') return;
-    const interesting = ['list', 'script', 'demo', 'verify', 'target', 'syntax'];
-    const keys = Object.keys(changes || {});
-    if (keys.some(k => interesting.includes(k))) {
-      // reload to reflect current state
-      loadActions().catch(err => logger.error('Failed to reload actions after storage change', err));
-    }
-  });
-}
+// React to external storage changes so popup and other pages stay in sync.
+// Use chrome.storage.onChanged (top-level) which provides the area parameter,
+// rather than chrome.storage.local.onChanged which only passes changes.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local') return;
+  const interesting = ['list', 'script', 'demo', 'verify', 'target', 'syntax'];
+  const keys = Object.keys(changes || {});
+  if (keys.some(k => interesting.includes(k))) {
+    loadActions().catch(err => logger.error('Failed to reload actions after storage change', err));
+  }
+});
 
 async function exportRobot() {
   try {

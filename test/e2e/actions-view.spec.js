@@ -14,25 +14,30 @@ test.describe('Actions View', () => {
   });
 
   /**
-   * Record some actions so there's data to view.
+   * Record some actions so there's data to view, then stop recording.
+   * Returns the popup page (target & popup stay open for the caller).
    */
   async function recordSomeActions() {
     const popup = await openPopup(context, extensionId);
     const target = await openFixture(context, 'form-page.html');
 
+    // Start recording — must bring target to front first so the extension
+    // knows which tab to record on, then click Record in the popup.
     await target.bringToFront();
     await popup.bringToFront();
     await popup.locator('#record').click();
     await popup.waitForTimeout(1000);
 
+    // Perform actions on the target page
     await target.bringToFront();
     await target.locator('#username').click();
-    await target.locator('#username').fill('action1');
+    await target.locator('#username').fill('testuser');
     await target.locator('#email').click();
-    await target.locator('#email').fill('action2@test.com');
+    await target.locator('#email').fill('test@example.com');
     await target.locator('#submit-btn').click();
     await target.waitForTimeout(500);
 
+    // Stop recording
     await popup.bringToFront();
     await popup.locator('#stop').click();
     await popup.waitForTimeout(1000);
@@ -40,103 +45,171 @@ test.describe('Actions View', () => {
     return { popup, target };
   }
 
-  test('open actions view → verify recorded actions appear', async () => {
-    const { popup, target } = await recordSomeActions();
-
-    // Click "Script View" to open actions view
+  /**
+   * Open the actions view tab from the popup and wait for it to load.
+   */
+  async function openActionsView(popup) {
     const [actionsPage] = await Promise.all([
       context.waitForEvent('page'),
       popup.locator('#open-actions-view').click(),
     ]);
     await actionsPage.waitForLoadState('domcontentloaded');
-    await actionsPage.waitForTimeout(1000);
+    // Give the JS time to read storage and render
+    await actionsPage.waitForTimeout(1500);
+    return actionsPage;
+  }
 
-    // The actions view should contain some rows with recorded actions
-    const body = await actionsPage.locator('body').innerText();
-    expect(body.length).toBeGreaterThan(0);
+  test('actions view loads and shows recorded script lines', async () => {
+    const { popup, target } = await recordSomeActions();
+    const actionsPage = await openActionsView(popup);
+
+    // The actions-list container should have script-line-row elements
+    const rows = actionsPage.locator('#actions-list .script-line-row');
+    const rowCount = await rows.count();
+    expect(rowCount).toBeGreaterThan(0);
+
+    // Each row should have a line number and a script-line-input with content
+    const firstInput = rows.first().locator('.script-line-input');
+    const firstValue = await firstInput.inputValue();
+    expect(firstValue.trim().length).toBeGreaterThan(0);
 
     await actionsPage.close();
     await popup.close();
     await target.close();
   });
 
-  test('delete an action from the actions view', async () => {
+  test('actions view script lines contain recorded page URL', async () => {
     const { popup, target } = await recordSomeActions();
+    const actionsPage = await openActionsView(popup);
 
-    const [actionsPage] = await Promise.all([
-      context.waitForEvent('page'),
-      popup.locator('#open-actions-view').click(),
-    ]);
-    await actionsPage.waitForLoadState('domcontentloaded');
-    await actionsPage.waitForTimeout(1000);
-
-    // Count action rows before deletion
-    const rowsBefore = await actionsPage.locator('.action-row, tr, .line-row').count();
-
-    // If there's a delete button, click the first one
-    const deleteBtn = actionsPage.locator('button.delete, button.btn-delete, .delete-btn, [title*="delete" i], [title*="remove" i]').first();
-    if (await deleteBtn.isVisible().catch(() => false)) {
-      await deleteBtn.click();
-      await actionsPage.waitForTimeout(500);
-
-      const rowsAfter = await actionsPage.locator('.action-row, tr, .line-row').count();
-      expect(rowsAfter).toBeLessThan(rowsBefore);
+    // Collect all line values
+    const inputs = actionsPage.locator('#actions-list .script-line-input');
+    const count = await inputs.count();
+    const lines = [];
+    for (let i = 0; i < count; i++) {
+      lines.push(await inputs.nth(i).inputValue());
     }
+    const allText = lines.join('\n');
+
+    // The first recorded action is always the URL of the page
+    expect(allText).toContain('form-page.html');
 
     await actionsPage.close();
     await popup.close();
     await target.close();
   });
 
-  test('reorder actions (move up/down)', async () => {
+  test('actions view refresh button reloads data', async () => {
     const { popup, target } = await recordSomeActions();
+    const actionsPage = await openActionsView(popup);
 
-    const [actionsPage] = await Promise.all([
-      context.waitForEvent('page'),
-      popup.locator('#open-actions-view').click(),
-    ]);
-    await actionsPage.waitForLoadState('domcontentloaded');
+    // Count rows before refresh
+    const rowsBefore = await actionsPage.locator('#actions-list .script-line-row').count();
+
+    // Click refresh
+    await actionsPage.locator('#refresh').click();
     await actionsPage.waitForTimeout(1000);
 
-    // Look for move-up / move-down buttons
-    const moveDownBtn = actionsPage.locator('button.move-down, button.btn-down, [title*="down" i], [title*="move" i]').first();
-    if (await moveDownBtn.isVisible().catch(() => false)) {
-      // Get text of first row before move
-      const _firstRowText = await actionsPage.locator('.action-row, .line-row').first().innerText();
-      await moveDownBtn.click();
-      await actionsPage.waitForTimeout(500);
-
-      // After moving down, the first row should be different
-      const newFirstRowText = await actionsPage.locator('.action-row, .line-row').first().innerText();
-      // They may or may not differ depending on which row's button was clicked
-      expect(typeof newFirstRowText).toBe('string');
-    }
+    // Rows should still be there (same data)
+    const rowsAfter = await actionsPage.locator('#actions-list .script-line-row').count();
+    expect(rowsAfter).toBe(rowsBefore);
 
     await actionsPage.close();
     await popup.close();
     await target.close();
   });
 
-  test('edit an action inline', async () => {
+  test('actions view copy-script button copies to clipboard', async () => {
     const { popup, target } = await recordSomeActions();
+    const actionsPage = await openActionsView(popup);
 
-    const [actionsPage] = await Promise.all([
-      context.waitForEvent('page'),
-      popup.locator('#open-actions-view').click(),
-    ]);
-    await actionsPage.waitForLoadState('domcontentloaded');
+    // Grant clipboard permissions
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+    // Click "Copy Script"
+    await actionsPage.locator('#copy-script').click();
+    await actionsPage.waitForTimeout(500);
+
+    // Read clipboard content
+    const clipboardText = await actionsPage.evaluate(() => navigator.clipboard.readText());
+    expect(clipboardText.length).toBeGreaterThan(0);
+
+    await actionsPage.close();
+    await popup.close();
+    await target.close();
+  });
+
+  test('actions view clear button removes all actions', async () => {
+    const { popup, target } = await recordSomeActions();
+    const actionsPage = await openActionsView(popup);
+
+    // Verify there are rows before clearing
+    const rowsBefore = await actionsPage.locator('#actions-list .script-line-row').count();
+    expect(rowsBefore).toBeGreaterThan(0);
+
+    // Click clear
+    await actionsPage.locator('#clear-script').click();
     await actionsPage.waitForTimeout(1000);
 
-    // Look for editable input fields in the actions view
-    const editableInput = actionsPage.locator('input.action-input, input.line-input, .action-row input, .line-row input').first();
-    if (await editableInput.isVisible().catch(() => false)) {
-      await editableInput.fill('    Log    Edited Action');
-      await editableInput.press('Enter');
-      await actionsPage.waitForTimeout(500);
+    // After clearing, script-line-rows should be gone
+    const rowsAfter = await actionsPage.locator('#actions-list .script-line-row').count();
+    expect(rowsAfter).toBe(0);
 
-      const value = await editableInput.inputValue();
-      expect(value).toContain('Edited Action');
-    }
+    await actionsPage.close();
+    await popup.close();
+    await target.close();
+  });
+
+  test('actions view receives live updates from storage changes', async () => {
+    // First open the actions view (empty after previous clear)
+    const popup = await openPopup(context, extensionId);
+    const actionsPage = await openActionsView(popup);
+
+    // Verify it starts empty or with minimal content
+    const rowsBefore = await actionsPage.locator('#actions-list .script-line-row').count();
+
+    // Now record some actions while actions view is open
+    const target = await openFixture(context, 'form-page.html');
+    await target.bringToFront();
+    await popup.bringToFront();
+    await popup.locator('#record').click();
+    await popup.waitForTimeout(1000);
+
+    await target.bringToFront();
+    await target.locator('#username').click();
+    await target.locator('#username').fill('livetest');
+    await target.waitForTimeout(300);
+
+    await popup.bringToFront();
+    await popup.locator('#stop').click();
+    await popup.waitForTimeout(2000);
+
+    // Bring actions view to front and check it updated
+    await actionsPage.bringToFront();
+    await actionsPage.waitForTimeout(1000);
+
+    const rowsAfter = await actionsPage.locator('#actions-list .script-line-row').count();
+    expect(rowsAfter).toBeGreaterThan(rowsBefore);
+
+    await actionsPage.close();
+    await popup.close();
+    await target.close();
+  });
+
+  test('per-line copy button copies individual line', async () => {
+    const { popup, target } = await recordSomeActions();
+    const actionsPage = await openActionsView(popup);
+
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+    // Hover over the first row to reveal controls, then click copy
+    const firstRow = actionsPage.locator('#actions-list .script-line-row').first();
+    await firstRow.hover();
+    await firstRow.locator('.av-icon-copy, [title*="copy" i]').first().click();
+    await actionsPage.waitForTimeout(500);
+
+    const clipboardText = await actionsPage.evaluate(() => navigator.clipboard.readText());
+    expect(clipboardText.length).toBeGreaterThan(0);
 
     await actionsPage.close();
     await popup.close();

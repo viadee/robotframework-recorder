@@ -3,10 +3,12 @@
 import logger from './logger.js';
 import { t, getCurrentLanguage } from './translations.js';
 import { initializeTranslator } from './translator/robot-translator.js';
+import { parseLine, getKeywordSpec, getCategoryColor } from './keyword-spec.js';
 
 const storage = chrome.storage.local;
 
 let currentLanguage = 'en';
+let currentLibrary = 'Browser';
 async function initLanguage() {
   try {
     currentLanguage = await getCurrentLanguage();
@@ -53,6 +55,110 @@ function copyToClipboard(text) {
   });
 }
 
+/**
+ * Create a structured action card for a single script line.
+ * Shows keyword with category color, named parameters, and controls.
+ */
+function createActionCard(text, idx, { onDelete } = {}) {
+  const parsed = parseLine(text);
+  const spec = parsed ? getKeywordSpec(parsed.keyword, currentLibrary) : null;
+  const catColor = parsed ? getCategoryColor(parsed.keyword, currentLibrary) : '#6B7280';
+
+  const card = document.createElement('div');
+  card.className = 'action-card script-line-row';
+  card.dataset.index = String(idx);
+
+  // Line number
+  const indexSpan = document.createElement('span');
+  indexSpan.className = 'script-line-index';
+  indexSpan.textContent = String(idx + 1);
+  card.appendChild(indexSpan);
+
+  // Main content area
+  const content = document.createElement('div');
+  content.className = 'action-card-content';
+
+  // Keyword badge
+  const badge = document.createElement('span');
+  badge.className = 'action-keyword-badge';
+  badge.style.setProperty('--cat-color', catColor);
+  badge.textContent = parsed ? (spec?.icon ? `${spec.icon} ` : '') + parsed.keyword : text.trim();
+  content.appendChild(badge);
+
+  // Parameters
+  if (parsed && parsed.args.length > 0) {
+    const paramsContainer = document.createElement('div');
+    paramsContainer.className = 'action-params';
+
+    parsed.args.forEach((arg, argIdx) => {
+      const paramWrapper = document.createElement('div');
+      paramWrapper.className = 'action-param';
+
+      // Parameter label
+      const label = document.createElement('span');
+      label.className = 'action-param-label';
+      if (spec && spec.params[argIdx]) {
+        label.textContent = spec.params[argIdx].name;
+      } else {
+        label.textContent = `arg${argIdx + 1}`;
+      }
+      paramWrapper.appendChild(label);
+
+      // Parameter value
+      const valueInput = document.createElement('input');
+      valueInput.className = 'action-param-value';
+      valueInput.value = arg;
+      valueInput.readOnly = true;
+      if (spec && spec.params[argIdx]?.placeholder) {
+        valueInput.placeholder = spec.params[argIdx].placeholder;
+      }
+      // Type hint styling
+      if (spec && spec.params[argIdx]) {
+        valueInput.dataset.paramType = spec.params[argIdx].type;
+      }
+      paramWrapper.appendChild(valueInput);
+
+      paramsContainer.appendChild(paramWrapper);
+    });
+
+    content.appendChild(paramsContainer);
+  }
+
+  // Raw line (collapsed, for copy)
+  const rawInput = document.createElement('input');
+  rawInput.className = 'script-line-input';
+  rawInput.type = 'hidden';
+  rawInput.value = text;
+  content.appendChild(rawInput);
+
+  card.appendChild(content);
+
+  // Controls
+  const controls = document.createElement('div');
+  controls.className = 'script-line-controls';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'av-icon-btn av-icon-copy';
+  copyBtn.title = t('copyThisLine', currentLanguage);
+  copyBtn.addEventListener('click', () => {
+    copyToClipboard(text);
+    displayStatus('lineCopied');
+  });
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'av-icon-btn av-icon-delete';
+  delBtn.title = t('deleteThisLine', currentLanguage);
+  delBtn.addEventListener('click', () => {
+    if (onDelete) onDelete(idx);
+  });
+
+  controls.appendChild(copyBtn);
+  controls.appendChild(delBtn);
+  card.appendChild(controls);
+
+  return card;
+}
+
 // Render when we already have pre-generated lines (e.g. stored script)
 function renderActionsFromLines(lines) {
   const container = document.getElementById('actions-list');
@@ -64,48 +170,15 @@ function renderActionsFromLines(lines) {
   }
 
   lines.forEach((text, idx) => {
-    const row = document.createElement('div');
-    row.className = 'script-line-row';
-    row.dataset.index = String(idx);
-
-    const indexSpan = document.createElement('span');
-    indexSpan.className = 'script-line-index';
-    indexSpan.textContent = String(idx + 1);
-
-    const input = document.createElement('input');
-    input.className = 'script-line-input';
-    input.value = text;
-    input.readOnly = true;
-
-    const controls = document.createElement('div');
-    controls.className = 'script-line-controls';
-
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'av-icon-btn av-icon-copy';
-    copyBtn.setAttribute('aria-label', t('copyThisLine', currentLanguage));
-    copyBtn.title = t('copyThisLine', currentLanguage);
-    copyBtn.addEventListener('click', () => {
-      copyToClipboard(text);
-      displayStatus('lineCopied');
+    const card = createActionCard(text, idx, {
+      onDelete: async (i) => {
+        lines.splice(i, 1);
+        const newScript = lines.join('\n');
+        await storage.set({ script: newScript });
+        renderActionsFromLines(lines);
+      },
     });
-
-    const exportBtn = document.createElement('button');
-    exportBtn.className = 'av-icon-btn av-icon-export';
-    exportBtn.setAttribute('aria-label', t('exportThisLine', currentLanguage));
-    exportBtn.title = t('exportThisLine', currentLanguage);
-    exportBtn.addEventListener('click', () => {
-      downloadBlob(`${text}\n`, `line-${idx + 1}.robot`, 'text/plain');
-      displayStatus('lineExported');
-    });
-
-    controls.appendChild(copyBtn);
-    controls.appendChild(exportBtn);
-
-    row.appendChild(indexSpan);
-    row.appendChild(input);
-    row.appendChild(controls);
-
-    container.appendChild(row);
+    container.appendChild(card);
   });
 }
 
@@ -303,6 +376,7 @@ async function loadActions() {
     const verify = res.verify || false;
     const target = res.target || 'SeleniumLibrary';
     const syntax = res.syntax || 'rpa';
+    currentLibrary = target;
     // initialize translator
     const translator = initializeTranslator(target, syntax);
     // If stored script differs from translator output, prefer stored script.

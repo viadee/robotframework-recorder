@@ -5,17 +5,19 @@ import {
   createContextMenus, handleContextMenuClick
 } from './context-menu.js';
 
-// Ensure side panel path is set on install and SW startup
+// Ensure side panel is configured on every SW startup
 chrome.sidePanel.setOptions({ path: 'src/popup.html', enabled: true })
   .catch(err => console.warn('sidePanel.setOptions failed:', err));
 
-// Open side panel on extension icon click (explicit, more reliable than openPanelOnActionClick)
-chrome.action.onClicked.addListener(async (tab) => {
-  try {
-    await chrome.sidePanel.open({ windowId: tab.windowId });
-  } catch (err) {
-    console.warn('sidePanel.open:', err);
-  }
+// Tell Chrome to open the side panel immediately on icon click (native, no SW delay)
+// This is a persistent setting — Chrome remembers it even after SW terminates
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+  .catch(err => console.warn('setPanelBehavior failed:', err));
+
+// Also set it on install to guarantee it's configured from the start
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+    .catch(err => console.warn('setPanelBehavior onInstalled failed:', err));
 });
 
 // Set up context menus

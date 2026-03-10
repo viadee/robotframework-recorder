@@ -8,8 +8,7 @@
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
   "background": {
-    "service_worker": "./src/service-worker.js",
-    "type": "module"
+    "service_worker": "./src/service-worker.js"
   },
   "options_page": "./src/options.html",
   "content_scripts": [{
@@ -39,8 +38,6 @@
     "128": "assets/mark-128.png",
     "256": "assets/mark-256.png"
   },
-  "permissions": ["downloads", "storage", "scripting", "tabs", "sidePanel", "contextMenus"],
-  "host_permissions": [
-    "<all_urls>"
-  ]
+  "permissions": ["sidePanel"],
+  "host_permissions": []
 }

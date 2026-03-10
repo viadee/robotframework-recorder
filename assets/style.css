@@ -484,7 +484,6 @@ button.copy-ok:hover {
   border-radius: var(--radius-md);
   margin-bottom: 2px;
   border-left: 3px solid transparent;
-  overflow: hidden;
   transition:
     background-color var(--duration-fast) var(--ease),
     border-color var(--duration-fast) var(--ease);
@@ -510,7 +509,9 @@ button.copy-ok:hover {
 }
 
 .script-line-input {
-  flex: 1 1 auto;
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
   font-family: var(--font-mono);
   font-size: var(--text-base);
   padding: var(--sp-2) var(--sp-2);
@@ -519,7 +520,8 @@ button.copy-ok:hover {
   background: transparent;
   color: var(--text-on-code);
   outline: none;
-  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .script-line-input:focus {

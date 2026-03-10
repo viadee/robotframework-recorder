@@ -27,8 +27,8 @@ const STATE_CONFIG = {
     saveEnabled: false,
   },
   record: {
-    show: ['pause', 'stop', 'status-field'],
-    hide: ['record', 'scan', 'xpath-console', 'resume', 'script-container',
+    show: ['pause', 'stop', 'status-field', 'script-container'],
+    hide: ['record', 'scan', 'xpath-console', 'resume',
       'settings-panel', 'xpath-inputs'],
     active: [],
     inactive: ['xpath-console', 'settings', 'scan'],
@@ -36,8 +36,8 @@ const STATE_CONFIG = {
     saveEnabled: false,
   },
   resume: {
-    show: ['pause', 'stop', 'status-field'],
-    hide: ['record', 'scan', 'xpath-console', 'resume', 'script-container',
+    show: ['pause', 'stop', 'status-field', 'script-container'],
+    hide: ['record', 'scan', 'xpath-console', 'resume',
       'settings-panel', 'xpath-inputs'],
     active: [],
     inactive: ['xpath-console', 'settings', 'scan'],
@@ -45,8 +45,8 @@ const STATE_CONFIG = {
     saveEnabled: false,
   },
   pause: {
-    show: ['resume', 'stop'],
-    hide: ['record', 'scan', 'xpath-console', 'pause', 'script-container',
+    show: ['resume', 'stop', 'script-container'],
+    hide: ['record', 'scan', 'xpath-console', 'pause',
       'settings-panel', 'xpath-inputs'],
     active: [],
     inactive: [],

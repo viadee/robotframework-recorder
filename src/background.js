@@ -262,8 +262,11 @@ async function handleInfo() {
   return { ok: true };
 }
 
-async function handleAppend({ message }) {
+async function handleAppend({ message, translator }) {
   await appendAction(message.script);
+  // Generate live script preview so the side panel shows actions in real-time
+  script = translator.generateOutput(list, MAX_ACTIONS, demo, verify);
+  await storage.set({ script });
   chrome.action.setIcon({ path: logo.action });
   setTimeout(() => chrome.action.setIcon({ path: logo.record }), 1000);
   return { ok: true };

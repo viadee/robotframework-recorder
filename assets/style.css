@@ -48,6 +48,10 @@
   50% { opacity: 1; transform: scale(1.05); }
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ── Icon mappings (unchanged for JS compat) ── */
 
 #scan::before            { background-image: url("btn-scan.svg"); }

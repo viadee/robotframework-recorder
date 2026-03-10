@@ -5,17 +5,16 @@ import {
   createContextMenus, handleContextMenuClick
 } from './context-menu.js';
 
-// Open side panel when extension icon is clicked
-chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
-  .catch(err => console.warn('setPanelBehavior failed:', err));
+// Ensure side panel path is set on install and SW startup
+chrome.sidePanel.setOptions({ path: 'src/popup.html', enabled: true })
+  .catch(err => console.warn('sidePanel.setOptions failed:', err));
 
-// Fallback: if setPanelBehavior didn't register in time, handle click explicitly
+// Open side panel on extension icon click (explicit, more reliable than openPanelOnActionClick)
 chrome.action.onClicked.addListener(async (tab) => {
   try {
-    await chrome.sidePanel.open({ tabId: tab.id });
+    await chrome.sidePanel.open({ windowId: tab.windowId });
   } catch (err) {
-    // open() may fail if panel is already open or not supported — ignore
-    console.warn('sidePanel.open fallback:', err);
+    console.warn('sidePanel.open:', err);
   }
 });
 

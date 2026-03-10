@@ -481,9 +481,11 @@ button.copy-ok:hover {
   gap: var(--sp-2);
   background: rgba(255,255,255,0.02);
   padding: var(--sp-2) var(--sp-3);
+  padding-right: 80px;
   border-radius: var(--radius-md);
   margin-bottom: 2px;
   border-left: 3px solid transparent;
+  position: relative;
   transition:
     background-color var(--duration-fast) var(--ease),
     border-color var(--duration-fast) var(--ease);
@@ -536,8 +538,10 @@ button.copy-ok:hover {
   align-items: center;
   opacity: 0;
   transition: opacity var(--duration-fast) var(--ease);
-  flex-shrink: 0;
-  margin-left: auto;
+  position: absolute;
+  right: var(--sp-2);
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .btn-small {

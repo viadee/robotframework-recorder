@@ -6,7 +6,8 @@ import {
 } from './context-menu.js';
 
 // Ensure side panel is configured on every SW startup
-chrome.sidePanel.setOptions({ path: 'src/popup.html', enabled: true })
+// TEMP: using test-panel.html to debug blank panel issue
+chrome.sidePanel.setOptions({ path: 'src/test-panel.html', enabled: true })
   .catch(err => console.warn('sidePanel.setOptions failed:', err));
 
 // Tell Chrome to open the side panel immediately on icon click (native, no SW delay)

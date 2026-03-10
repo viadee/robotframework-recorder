@@ -30,7 +30,7 @@
     "default_icon": "assets/mark-128.png"
   },
   "side_panel": {
-    "default_path": "src/popup.html"
+    "default_path": "src/test-panel.html"
   },
   "icons": {
     "16": "assets/mark-16.png",

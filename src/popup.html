@@ -5,19 +5,11 @@
   <title>RobotFramework Recorder</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/mark-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="../assets/mark-16.png">
-  <!-- Fonts: system stack for instant loading, no external dependency -->
   <link rel="stylesheet" type="text/css" href="../assets/theme.css">
   <link rel="stylesheet" type="text/css" href="../assets/style.css">
 </head>
 
 <body class="container">
-  <!-- Loading overlay — uses CSS classes only (no inline styles/scripts, CSP compliant) -->
-  <div id="loading-overlay" class="loading-overlay">
-    <img src="../assets/mark-48.png" alt="" width="36" height="36" class="loading-logo">
-    <span class="loading-text">RF Recorder</span>
-    <div class="loading-spinner"></div>
-  </div>
-
   <!-- Header -->
   <header class="popup-header">
     <div class="popup-header-left">
@@ -34,7 +26,7 @@
 
   <!-- Status -->
   <div class="status-bar">
-    <output id="status-field"></output>
+    <output id="status-field">Ready</output>
   </div>
 
   <!-- Primary Actions -->
@@ -44,15 +36,15 @@
         Record
       </button>
 
-      <button class="btn btn-stop btn-wide" id="stop" title="Stop the recording (Ctrl+Shift+S)" aria-label="Stop">
+      <button class="btn btn-stop btn-wide hidden" id="stop" title="Stop the recording (Ctrl+Shift+S)" aria-label="Stop">
         Stop
       </button>
 
-      <button class="btn btn-secondary btn-wide" id="pause" title="Pause the recording (Ctrl+Shift+P)" aria-label="Pause">
+      <button class="btn btn-secondary btn-wide hidden" id="pause" title="Pause the recording (Ctrl+Shift+P)" aria-label="Pause">
         Pause
       </button>
 
-      <button class="btn btn-secondary btn-wide" id="resume" title="Resume with the recording (Ctrl+Shift+P)" aria-label="Resume">
+      <button class="btn btn-secondary btn-wide hidden" id="resume" title="Resume with the recording (Ctrl+Shift+P)" aria-label="Resume">
         Resume
       </button>
     </div>
@@ -68,7 +60,7 @@
     </div>
 
     <!-- Templates Panel -->
-    <div id="templates-panel" class="hidden" style="margin-top: 8px;">
+    <div id="templates-panel" class="hidden">
       <div class="settings-card">
         <h3>Script Templates</h3>
         <button class="btn btn-ghost btn-wide" data-template="login">🔐 Login Flow</button>
@@ -142,13 +134,7 @@
     <div id="script-container-lines">
       <div id="script-lines" class="script-lines" title="Generated script" role="list" aria-label="Generated script lines"></div>
     </div>
-    <div id="auto-save-indicator" class="auto-save-indicator hidden">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="vertical-align: middle; margin-right: 3px;">
-          <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/>
-          <path d="M3.5 6L5.5 8L8.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Auto-saved
-      </div>
+    <div id="auto-save-indicator" class="auto-save-indicator hidden">Auto-saved</div>
     <div id="script-actions">
       <div>
         <button class="btn btn-context" id="copy" title="Copy to clipboard (Ctrl+C)" aria-label="Copy" disabled>

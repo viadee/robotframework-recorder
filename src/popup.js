@@ -11,15 +11,6 @@ let introTour = null;
 let scriptLines = [];
 let nextLineId = 1;
 
-// Safety net: remove loading overlay after 3s no matter what (CSP-safe, in external script)
-setTimeout(() => {
-  const o = document.getElementById('loading-overlay');
-  if (o) {
-    o.classList.add('hidden');
-    setTimeout(() => o.remove(), 400);
-  }
-}, 3000);
-
 // ---------------------------------------------------------------------------
 // State Machine
 // ---------------------------------------------------------------------------
@@ -603,13 +594,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     logger.error('Init failed:', err);
     console.error('RF Recorder init failed:', err);
-  } finally {
-    // Always hide loading overlay, even if init fails
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) {
-      overlay.classList.add('hidden');
-      setTimeout(() => overlay.remove(), 400);
-    }
   }
 }, false);
 

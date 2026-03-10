@@ -340,6 +340,9 @@ const handlers = {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
+      // Lazy init — only runs once, on first message
+      await ensureInitialized();
+
       // Resolve active tab — but don't overwrite recordTab with extension pages
       const tab = await resolveActiveTab(sender);
       const isExtensionTab = tab?.url?.startsWith('chrome-extension://');
@@ -380,10 +383,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // ---------------------------------------------------------------------------
-// Initialization (runs on service worker start/restart)
+// Lazy initialization — only runs when first message arrives
 // ---------------------------------------------------------------------------
 
-(async () => {
+let _initialized = false;
+
+async function ensureInitialized() {
+  if (_initialized) return;
+  _initialized = true;
   await setupStorageDefaults();
   await loadState();
-})();
+}

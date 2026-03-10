@@ -1,12 +1,14 @@
-/* global chrome t getCurrentLanguage */
+/* global chrome */
 
 import logger from './logger.js';
-import { filename } from './constants.js';
+import { t, getCurrentLanguage } from './translations.js';
 import { initializeTranslator } from './translator/robot-translator.js';
+import { parseLine, getKeywordSpec, getCategoryColor } from './keyword-spec.js';
 
 const storage = chrome.storage.local;
 
 let currentLanguage = 'en';
+let currentLibrary = 'Browser';
 async function initLanguage() {
   try {
     currentLanguage = await getCurrentLanguage();
@@ -53,6 +55,110 @@ function copyToClipboard(text) {
   });
 }
 
+/**
+ * Create a structured action card for a single script line.
+ * Shows keyword with category color, named parameters, and controls.
+ */
+function createActionCard(text, idx, { onDelete } = {}) {
+  const parsed = parseLine(text);
+  const spec = parsed ? getKeywordSpec(parsed.keyword, currentLibrary) : null;
+  const catColor = parsed ? getCategoryColor(parsed.keyword, currentLibrary) : '#6B7280';
+
+  const card = document.createElement('div');
+  card.className = 'action-card script-line-row';
+  card.dataset.index = String(idx);
+
+  // Line number
+  const indexSpan = document.createElement('span');
+  indexSpan.className = 'script-line-index';
+  indexSpan.textContent = String(idx + 1);
+  card.appendChild(indexSpan);
+
+  // Main content area
+  const content = document.createElement('div');
+  content.className = 'action-card-content';
+
+  // Keyword badge
+  const badge = document.createElement('span');
+  badge.className = 'action-keyword-badge';
+  badge.style.setProperty('--cat-color', catColor);
+  badge.textContent = parsed ? (spec?.icon ? `${spec.icon} ` : '') + parsed.keyword : text.trim();
+  content.appendChild(badge);
+
+  // Parameters
+  if (parsed && parsed.args.length > 0) {
+    const paramsContainer = document.createElement('div');
+    paramsContainer.className = 'action-params';
+
+    parsed.args.forEach((arg, argIdx) => {
+      const paramWrapper = document.createElement('div');
+      paramWrapper.className = 'action-param';
+
+      // Parameter label
+      const label = document.createElement('span');
+      label.className = 'action-param-label';
+      if (spec && spec.params[argIdx]) {
+        label.textContent = spec.params[argIdx].name;
+      } else {
+        label.textContent = `arg${argIdx + 1}`;
+      }
+      paramWrapper.appendChild(label);
+
+      // Parameter value
+      const valueInput = document.createElement('input');
+      valueInput.className = 'action-param-value';
+      valueInput.value = arg;
+      valueInput.readOnly = true;
+      if (spec && spec.params[argIdx]?.placeholder) {
+        valueInput.placeholder = spec.params[argIdx].placeholder;
+      }
+      // Type hint styling
+      if (spec && spec.params[argIdx]) {
+        valueInput.dataset.paramType = spec.params[argIdx].type;
+      }
+      paramWrapper.appendChild(valueInput);
+
+      paramsContainer.appendChild(paramWrapper);
+    });
+
+    content.appendChild(paramsContainer);
+  }
+
+  // Raw line (collapsed, for copy)
+  const rawInput = document.createElement('input');
+  rawInput.className = 'script-line-input';
+  rawInput.type = 'hidden';
+  rawInput.value = text;
+  content.appendChild(rawInput);
+
+  card.appendChild(content);
+
+  // Controls
+  const controls = document.createElement('div');
+  controls.className = 'script-line-controls';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'av-icon-btn av-icon-copy';
+  copyBtn.title = t('copyThisLine', currentLanguage);
+  copyBtn.addEventListener('click', () => {
+    copyToClipboard(text);
+    displayStatus('lineCopied');
+  });
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'av-icon-btn av-icon-delete';
+  delBtn.title = t('deleteThisLine', currentLanguage);
+  delBtn.addEventListener('click', () => {
+    if (onDelete) onDelete(idx);
+  });
+
+  controls.appendChild(copyBtn);
+  controls.appendChild(delBtn);
+  card.appendChild(controls);
+
+  return card;
+}
+
 // Render when we already have pre-generated lines (e.g. stored script)
 function renderActionsFromLines(lines) {
   const container = document.getElementById('actions-list');
@@ -64,48 +170,15 @@ function renderActionsFromLines(lines) {
   }
 
   lines.forEach((text, idx) => {
-    const row = document.createElement('div');
-    row.className = 'script-line-row';
-    row.dataset.index = String(idx);
-
-    const indexSpan = document.createElement('span');
-    indexSpan.className = 'script-line-index';
-    indexSpan.textContent = String(idx + 1);
-
-    const input = document.createElement('input');
-    input.className = 'script-line-input';
-    input.value = text;
-    input.readOnly = true;
-
-    const controls = document.createElement('div');
-    controls.className = 'script-line-controls';
-
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'av-icon-btn av-icon-copy';
-    copyBtn.setAttribute('aria-label', t('copyThisLine', currentLanguage));
-    copyBtn.title = t('copyThisLine', currentLanguage);
-    copyBtn.addEventListener('click', () => {
-      copyToClipboard(text);
-      displayStatus('lineCopied');
+    const card = createActionCard(text, idx, {
+      onDelete: async (i) => {
+        lines.splice(i, 1);
+        const newScript = lines.join('\n');
+        await storage.set({ script: newScript });
+        renderActionsFromLines(lines);
+      },
     });
-
-    const exportBtn = document.createElement('button');
-    exportBtn.className = 'av-icon-btn av-icon-export';
-    exportBtn.setAttribute('aria-label', t('exportThisLine', currentLanguage));
-    exportBtn.title = t('exportThisLine', currentLanguage);
-    exportBtn.addEventListener('click', () => {
-      downloadBlob(`${text}\n`, `line-${idx + 1}.robot`, 'text/plain');
-      displayStatus('lineExported');
-    });
-
-    controls.appendChild(copyBtn);
-    controls.appendChild(exportBtn);
-
-    row.appendChild(indexSpan);
-    row.appendChild(input);
-    row.appendChild(controls);
-
-    container.appendChild(row);
+    container.appendChild(card);
   });
 }
 
@@ -303,6 +376,7 @@ async function loadActions() {
     const verify = res.verify || false;
     const target = res.target || 'SeleniumLibrary';
     const syntax = res.syntax || 'rpa';
+    currentLibrary = target;
     // initialize translator
     const translator = initializeTranslator(target, syntax);
     // If stored script differs from translator output, prefer stored script.
@@ -325,19 +399,17 @@ async function loadActions() {
   }
 }
 
-// React to external storage changes so popup and other pages stay in sync
-if (storage && storage.onChanged && typeof storage.onChanged.addListener === 'function') {
-  storage.onChanged.addListener((changes, area) => {
-    // only respond to local storage changes
-    if (area !== 'local') return;
-    const interesting = ['list', 'script', 'demo', 'verify', 'target', 'syntax'];
-    const keys = Object.keys(changes || {});
-    if (keys.some(k => interesting.includes(k))) {
-      // reload to reflect current state
-      loadActions().catch(err => logger.error('Failed to reload actions after storage change', err));
-    }
-  });
-}
+// React to external storage changes so popup and other pages stay in sync.
+// Use chrome.storage.onChanged (top-level) which provides the area parameter,
+// rather than chrome.storage.local.onChanged which only passes changes.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local') return;
+  const interesting = ['list', 'script', 'demo', 'verify', 'target', 'syntax'];
+  const keys = Object.keys(changes || {});
+  if (keys.some(k => interesting.includes(k))) {
+    loadActions().catch(err => logger.error('Failed to reload actions after storage change', err));
+  }
+});
 
 async function exportRobot() {
   try {
@@ -367,14 +439,142 @@ async function clearScript() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Extract Keyword — select lines → wrap in a new keyword
+// ---------------------------------------------------------------------------
+
+async function extractKeyword() {
+  const res = await storage.get({ script: '', target: 'Browser' });
+  const script = res.script || '';
+  if (!script.trim()) {
+    displayStatus('No script to extract from');
+    return;
+  }
+
+  const lines = script.split('\n');
+  const actionLines = lines.filter(l => l.trim().length > 0);
+  if (actionLines.length === 0) {
+    displayStatus('No actions to extract');
+    return;
+  }
+
+  // Prompt for keyword name
+  const kwName = window.prompt(
+    'Name for the new keyword:',
+    'My Custom Keyword'
+  );
+  if (!kwName) return;
+
+  // Detect variables used (${...}) to make them arguments
+  const varPattern = /\$\{([^}]+)\}/g;
+  const varsUsed = new Set();
+  for (const line of actionLines) {
+    let match;
+    while ((match = varPattern.exec(line)) !== null) {
+      varsUsed.add(match[1]);
+    }
+  }
+
+  // Build keyword definition
+  const kwLines = [`${kwName}`];
+  if (varsUsed.size > 0) {
+    const argLine = '    [Arguments]    '
+      + [...varsUsed].map(v => `\${${v}}`).join('    ');
+    kwLines.push(argLine);
+  }
+  kwLines.push(
+    ...actionLines.map(l => '    ' + l.replace(/^\s+/, ''))
+  );
+
+  // Build resource file content
+  const resourceContent = [
+    '*** Keywords ***',
+    ...kwLines,
+  ].join('\n');
+
+  // Store the keyword definition
+  const existing = await storage.get({ keywords: [] });
+  const keywords = existing.keywords || [];
+  keywords.push({
+    name: kwName,
+    lines: kwLines,
+    args: [...varsUsed],
+    created: new Date().toISOString(),
+  });
+  await storage.set({ keywords });
+
+  // Replace the script with a call to the new keyword
+  const callLine = varsUsed.size > 0
+    ? '    ' + kwName + '    '
+      + [...varsUsed].map(v => `\${${v}}`).join('    ')
+    : '    ' + kwName;
+  await storage.set({ script: callLine });
+
+  displayStatus(`Extracted keyword: ${kwName}`);
+
+  // Offer download of the resource file
+  downloadBlob(
+    resourceContent,
+    `${kwName.replace(/\s+/g, '_').toLowerCase()}.resource`,
+    'text/plain;charset=utf-8'
+  );
+
+  await loadActions();
+}
+
+// ---------------------------------------------------------------------------
+// Export as .resource library file
+// ---------------------------------------------------------------------------
+
+async function exportResource() {
+  const res = await storage.get({
+    script: '', keywords: [], target: 'Browser',
+  });
+  const script = res.script || '';
+  const keywords = res.keywords || [];
+  const library = res.target || 'Browser';
+
+  const lines = [
+    '*** Settings ***',
+    `Library           ${library}`,
+    '',
+    '*** Keywords ***',
+  ];
+
+  // Add stored custom keywords
+  for (const kw of keywords) {
+    lines.push(...kw.lines);
+    lines.push('');
+  }
+
+  // If current script has content, add it as "Recorded Actions"
+  if (script.trim()) {
+    lines.push('Recorded Actions');
+    const scriptLines = script.split('\n');
+    for (const sl of scriptLines) {
+      if (sl.trim()) {
+        lines.push('    ' + sl.replace(/^\s+/, ''));
+      }
+    }
+  }
+
+  const content = lines.join('\n');
+  downloadBlob(
+    content,
+    'keywords.resource',
+    'text/plain;charset=utf-8'
+  );
+  displayStatus('Exported as .resource library');
+}
+
 function init() {
   // initialize language then wire UI text and handlers
   initLanguage().then(() => {
     // set document title and heading according to language
     try {
       document.title = t('pageTitle', currentLanguage) || document.title;
-    } catch (e) {
-      // ignore if document not available
+    } catch (err) {
+      console.warn('RF Recorder: could not set document title:', err);
     }
     const heading = document.getElementById('actions-heading');
     if (heading) heading.textContent = t('actionsHeading', currentLanguage) || heading.textContent;
@@ -396,8 +596,22 @@ function init() {
     });
     document.getElementById('clear-script').addEventListener('click', () => clearScript());
 
+    // Extract keyword & export resource
+    const extractBtn = document.getElementById('extract-keyword');
+    if (extractBtn) {
+      extractBtn.textContent = t('extractKeyword', currentLanguage);
+      extractBtn.addEventListener('click', () => extractKeyword());
+    }
+    const exportResBtn = document.getElementById('export-resource');
+    if (exportResBtn) {
+      exportResBtn.textContent = t('exportResource', currentLanguage);
+      exportResBtn.addEventListener('click', () => exportResource());
+    }
+
     // Initial load
     loadActions();
+  }).catch(err => {
+    console.error('RF Recorder actions-view init failed:', err);
   });
 }
 

@@ -11,14 +11,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Start xvfb on Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          export DISPLAY=:99.0
-          Xvfb -ac :99 -screen 0 1280x1024x16 > /dev/null 2>&1 &
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 12
-      - run: yarn
-      - run: xvfb-run --auto-servernum yarn test
+          node-version: 20
+      - run: npm ci
+      - run: xvfb-run --auto-servernum npm test

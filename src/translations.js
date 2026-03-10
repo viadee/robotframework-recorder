@@ -1,5 +1,3 @@
-/* global chrome */
-
 const translations = {
   en: {
     // Buttons
@@ -78,6 +76,10 @@ const translations = {
     pageTitle: 'Recorder - Actions Viewer',
     actionsHeading: 'Recorded actions',
     actionsListPlaceholder: 'Actions will appear here',
+    // Extract & Resource
+    extractKeyword: 'Extract Keyword',
+    exportResource: 'Export .resource',
+    deleteThisLine: 'Delete this line',
     // Popup specific
     addLine: 'Add line',
     addLineTitle: 'Add new line'
@@ -155,6 +157,10 @@ const translations = {
     noScriptGenerated: 'Kein Script generiert',
     exportStarted: 'Export gestartet',
     exportFailed: 'Export fehlgeschlagen',
+    // Extract & Resource
+    extractKeyword: 'Keyword extrahieren',
+    exportResource: 'Export .resource',
+    deleteThisLine: 'Diese Zeile löschen',
     // Page labels
     pageTitle: 'Recorder - Aktionen',
     actionsHeading: 'Aufgenommene Aktionen',
@@ -165,33 +171,25 @@ const translations = {
   }
 };
 
-
 /**
  * Get the current language setting or detect from browser locale
  */
-async function getCurrentLanguage() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get({ language: null }, (result) => {
-      if (result.language) {
-        resolve(result.language);
-      } else {
-        // Auto-detect from browser language
-        const browserLang = chrome.i18n.getUILanguage();
-        const lang = browserLang.startsWith('de') ? 'de' : 'en';
-        resolve(lang);
-      }
-    });
-  });
+export async function getCurrentLanguage() {
+  const result = await chrome.storage.local.get({ language: null });
+  if (result.language) {
+    return result.language;
+  }
+  const browserLang = chrome.i18n.getUILanguage();
+  return browserLang.startsWith('de') ? 'de' : 'en';
 }
 
 /**
  * Get translated string for given key and language
  */
-function t(key, language = 'en') {
+export function t(key, language = 'en') {
   if (translations[language] && translations[language][key]) {
     return translations[language][key];
   }
-  // Fallback to English
   if (translations.en[key]) {
     return translations.en[key];
   }
@@ -201,29 +199,13 @@ function t(key, language = 'en') {
 /**
  * Get all translations for a language
  */
-function getTranslations(language = 'en') {
+export function getTranslations(language = 'en') {
   return translations[language] || translations.en;
 }
 
 /**
  * Set the current language
  */
-function setLanguage(language) {
+export function setLanguage(language) {
   chrome.storage.local.set({ language });
-}
-
-if (typeof exports !== 'undefined') {
-  exports.getCurrentLanguage = getCurrentLanguage;
-  exports.t = t;
-  exports.getTranslations = getTranslations;
-  exports.setLanguage = setLanguage;
-}
-
-// ES module exports (for module imports)
-// Expose globals for classic script usage (popup etc.)
-if (typeof window !== 'undefined') {
-  window.getCurrentLanguage = getCurrentLanguage;
-  window.t = t;
-  window.getTranslations = getTranslations;
-  window.setLanguage = setLanguage;
 }

@@ -1,6 +1,6 @@
-/* eslint-disable func-names */
-/* eslint-disable no-console */
-/* eslint-disable no-await-in-loop */
+ 
+ 
+ 
 const { chromium } = require('playwright');
 const pathLib = require('path');
 const assert = require('assert');

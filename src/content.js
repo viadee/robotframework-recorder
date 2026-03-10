@@ -28,11 +28,11 @@ function handleByChange(type) {
 const debug = false;
 const logger = debug ? {
   debug: (data) => {
-    /* eslint-disable-next-line no-console */
+     
     console.debug(data);
   },
   error: (data) => {
-    /* eslint-disable-next-line no-console */
+     
     console.error(data);
   }
 } : {
@@ -67,7 +67,7 @@ function xpathValidation(xpath) {
     xpathResult = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
   } catch (error) {
     host.runtime.sendMessage({ operation: 'display', message: error.toString() });
-    logger.debug(error);
+    console.error('RF Recorder XPath error:', error);
   }
   if (!xpathResult) return;
   host.runtime.sendMessage({ operation: 'display', message: `XPath is valid, matches: ${xpathResult.snapshotLength}` });

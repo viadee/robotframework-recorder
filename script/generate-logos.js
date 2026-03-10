@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
+ 
 
 /**
  * Script to generate logo variants from robot-logo.png
@@ -18,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Check if Sharp is installed (optional dependency)
-/* eslint-disable global-require, import/no-unresolved */
+/* eslint-disable import/no-unresolved */
 let sharp;
 try {
   sharp = require('sharp');
@@ -27,7 +27,7 @@ try {
   console.error('Please install it first with: npm install sharp');
   process.exit(1);
 }
-/* eslint-enable global-require, import/no-unresolved */
+/* eslint-enable import/no-unresolved */
 
 const assetsDir = path.join(__dirname, '..', 'robotframework-recorder-assets');
 const outputDir = path.join(__dirname, '..', 'assets');

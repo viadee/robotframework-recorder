@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 
 const sinon = require('sinon');
 const options = require('../src/options');

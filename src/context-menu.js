@@ -263,7 +263,7 @@ async function getLibrary() {
 
 function buildActionLine(library, keyword, args) {
   const parts = [keyword, ...args].filter(Boolean);
-  return '    ' + parts.join('    ');
+  return parts.join('    ');
 }
 
 // ---------------------------------------------------------------------------

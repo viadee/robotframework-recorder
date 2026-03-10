@@ -17,14 +17,16 @@ const FIXTURES_DIR = path.join(__dirname, 'fixtures');
  */
 async function launchExtension(options = {}) {
   const userDataDir = path.join(__dirname, '.tmp-profile-' + Date.now());
+  const useHeadless = process.env.HEADLESS === '1' || process.env.DOCKER;
   const context = await chromium.launchPersistentContext(userDataDir, {
-    headless: false,          // Extensions require headed mode
+    headless: false,          // Must be false; use --headless=new via args instead
     args: [
       `--disable-extensions-except=${EXTENSION_PATH}`,
       `--load-extension=${EXTENSION_PATH}`,
       '--no-first-run',
       '--disable-default-apps',
       '--disable-popup-blocking',
+      ...(useHeadless ? ['--headless=new'] : []),
       ...(process.env.DOCKER ? [
         '--no-sandbox',
         '--disable-setuid-sandbox',

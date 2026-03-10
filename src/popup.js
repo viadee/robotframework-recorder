@@ -219,17 +219,22 @@ function renderScriptLines() {
 // ---------------------------------------------------------------------------
 
 function updateValueByMessage(elementId, message) {
-  if (message || message === '') {
-    if (elementId === '#script-output' || elementId === '#script-lines') {
-      const raw = message === null || message === undefined ? '' : message.toString();
-      scriptLines = raw.split('\n').map(ln => ({ id: nextLineId++, text: ln }));
-      renderScriptLines();
-    } else {
-      const field = document.querySelector(elementId);
-      if (field) field.innerText = message.toString();
-    }
-  } else {
+  if (message === null || message === undefined) {
     logger.debug(`Tried to update value of ${elementId} by ${message}`);
+    return;
+  }
+  // Guard: never display raw objects in the UI
+  if (typeof message === 'object') {
+    logger.debug(`Skipping object display for ${elementId}:`, message);
+    return;
+  }
+  const text = String(message);
+  if (elementId === '#script-output' || elementId === '#script-lines') {
+    scriptLines = text.split('\n').map(ln => ({ id: nextLineId++, text: ln }));
+    renderScriptLines();
+  } else {
+    const field = document.querySelector(elementId);
+    if (field) field.innerText = text;
   }
 }
 
@@ -368,7 +373,12 @@ async function operation(e) {
   toggle(e);
   try {
     const resp = await chrome.runtime.sendMessage({ operation: e.target.id });
-    displayStatus(resp);
+    // resp is { ok: true, ... } — don't display raw objects in status bar
+    if (resp && typeof resp === 'object') {
+      // Status updates come via storage.onChanged, no need to display here
+    } else if (resp) {
+      displayStatus(resp);
+    }
   } catch (err) {
     if (isPortClosedError(err)) {
       logger.warn(

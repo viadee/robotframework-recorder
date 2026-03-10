@@ -69,6 +69,15 @@ test.describe('Live Preview During Recording', () => {
 
     await target.bringToFront();
     await popup.bringToFront();
+
+    // Ensure idle state: if stop button is visible, click it first
+    const stopBtn = popup.locator('#stop');
+    if (await stopBtn.isVisible().catch(() => false)) {
+      await stopBtn.click();
+      await popup.waitForTimeout(500);
+    }
+
+    await popup.locator('#record').waitFor({ state: 'visible', timeout: 5000 });
     await popup.locator('#record').click();
     await popup.waitForTimeout(1000);
 

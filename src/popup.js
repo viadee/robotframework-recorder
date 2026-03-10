@@ -581,13 +581,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('info').addEventListener('click', info);
 
-    // Hide loading overlay — UI is ready
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) {
-      overlay.classList.add('hidden');
-      setTimeout(() => overlay.remove(), 400);
-    }
-
     const openActionsBtn = document.getElementById('open-actions-view');
     if (openActionsBtn) {
       openActionsBtn.addEventListener('click', () => {
@@ -599,7 +592,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('Init failed:', err);
+    console.error('RF Recorder init failed:', err);
+  } finally {
+    // Always hide loading overlay, even if init fails
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+      setTimeout(() => overlay.remove(), 400);
+    }
   }
 }, false);
 

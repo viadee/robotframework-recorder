@@ -573,8 +573,8 @@ function init() {
     // set document title and heading according to language
     try {
       document.title = t('pageTitle', currentLanguage) || document.title;
-    } catch (_e) {
-      // ignore if document not available
+    } catch (err) {
+      console.warn('RF Recorder: could not set document title:', err);
     }
     const heading = document.getElementById('actions-heading');
     if (heading) heading.textContent = t('actionsHeading', currentLanguage) || heading.textContent;
@@ -610,6 +610,8 @@ function init() {
 
     // Initial load
     loadActions();
+  }).catch(err => {
+    console.error('RF Recorder actions-view init failed:', err);
   });
 }
 

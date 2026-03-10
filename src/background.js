@@ -96,7 +96,7 @@ async function setupStorageDefaults() {
 function handleError(error) {
   const lastError = chrome.runtime.lastError;
   const message = (lastError && lastError.message) || (error && error.message) || String(error);
-  logger.debug('Chrome/API error:', message);
+  console.error('RF Recorder error:', message, error);
   storage.set({ message: statusMessage.failure, canSave: false });
 }
 

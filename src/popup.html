@@ -11,23 +11,12 @@
 </head>
 
 <body class="container">
-  <!-- Loading overlay — inline styles ensure visibility even before CSS loads -->
-  <div id="loading-overlay" style="position:fixed;inset:0;z-index:9999;background:#0C0C0F;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:opacity .3s ease">
-    <img src="../assets/mark-48.png" alt="" width="36" height="36" style="animation:loading-pulse 1.5s ease-in-out infinite">
-    <span style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;font-weight:600;color:#8B8B9A;letter-spacing:.05em">RF Recorder</span>
-    <div style="width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:#0091FF;border-radius:50%;animation:spin .7s linear infinite"></div>
+  <!-- Loading overlay — uses CSS classes only (no inline styles/scripts, CSP compliant) -->
+  <div id="loading-overlay" class="loading-overlay">
+    <img src="../assets/mark-48.png" alt="" width="36" height="36" class="loading-logo">
+    <span class="loading-text">RF Recorder</span>
+    <div class="loading-spinner"></div>
   </div>
-  <style>
-    @keyframes spin { to { transform: rotate(360deg) } }
-    @keyframes loading-pulse { 0%,100% { opacity:.6;transform:scale(1) } 50% { opacity:1;transform:scale(1.05) } }
-  </style>
-  <script>
-    // Safety net: remove overlay after 3s no matter what
-    setTimeout(function() {
-      var o = document.getElementById('loading-overlay');
-      if (o) { o.style.opacity = '0'; setTimeout(function() { o.remove(); }, 400); }
-    }, 3000);
-  </script>
 
   <!-- Header -->
   <header class="popup-header">

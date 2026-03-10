@@ -11,6 +11,15 @@ let introTour = null;
 let scriptLines = [];
 let nextLineId = 1;
 
+// Safety net: remove loading overlay after 3s no matter what (CSP-safe, in external script)
+setTimeout(() => {
+  const o = document.getElementById('loading-overlay');
+  if (o) {
+    o.classList.add('hidden');
+    setTimeout(() => o.remove(), 400);
+  }
+}, 3000);
+
 // ---------------------------------------------------------------------------
 // State Machine
 // ---------------------------------------------------------------------------

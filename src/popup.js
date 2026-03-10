@@ -186,19 +186,19 @@ function renderScriptLines() {
 
     const up = document.createElement('button');
     up.className = 'btn btn-small';
-    up.textContent = '↑';
+    up.textContent = '▲';
     up.title = 'Move up';
     up.addEventListener('click', () => moveLine(index, -1));
 
     const down = document.createElement('button');
     down.className = 'btn btn-small';
-    down.textContent = '↓';
+    down.textContent = '▼';
     down.title = 'Move down';
     down.addEventListener('click', () => moveLine(index, 1));
 
     const del = document.createElement('button');
     del.className = 'btn btn-small btn-danger';
-    del.textContent = '✕';
+    del.textContent = '×';
     del.title = 'Delete line';
     del.addEventListener('click', () => deleteLine(index));
 

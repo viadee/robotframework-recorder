@@ -581,6 +581,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('info').addEventListener('click', info);
 
+    // Hide loading overlay — UI is ready
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+      setTimeout(() => overlay.remove(), 400);
+    }
+
     const openActionsBtn = document.getElementById('open-actions-view');
     if (openActionsBtn) {
       openActionsBtn.addEventListener('click', () => {

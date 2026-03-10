@@ -4,3 +4,9 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
 
 // Background message handler (record, stop, scan, etc.)
 import './background.js';
+
+// Context menus
+import { createContextMenus, handleContextMenuClick } from './context-menu.js';
+
+chrome.runtime.onInstalled.addListener(() => createContextMenus());
+chrome.contextMenus.onClicked.addListener(handleContextMenuClick);

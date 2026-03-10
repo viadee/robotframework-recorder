@@ -8,5 +8,7 @@ import './background.js';
 // Context menus
 import { createContextMenus, handleContextMenuClick } from './context-menu.js';
 
+// Recreate menus on install and every SW start (they can vanish)
 chrome.runtime.onInstalled.addListener(() => createContextMenus());
+createContextMenus();
 chrome.contextMenus.onClicked.addListener(handleContextMenuClick);

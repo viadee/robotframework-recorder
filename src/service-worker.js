@@ -1,25 +1,19 @@
-// Background must be imported statically — Chrome MV3 requires
-// event listeners (onMessage) to be registered synchronously at top level.
-// ES module imports are hoisted, so this runs first regardless of position.
-import './background.js';
-
-// Side panel config — these are persistent, Chrome remembers them.
-// Runs after imports but still during SW initialization.
+// Side panel config — runs first, before heavy module init.
+// These are persistent settings Chrome remembers across SW restarts.
 chrome.sidePanel.setOptions({ path: 'src/popup.html', enabled: true })
   .catch(err => console.warn('sidePanel.setOptions failed:', err));
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
   .catch(err => console.warn('setPanelBehavior failed:', err));
 
-// Context menus only need to be created on install/update (they persist)
-chrome.runtime.onInstalled.addListener(async () => {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
-    .catch(err => console.warn('setPanelBehavior onInstalled:', err));
-  const { createContextMenus } = await import('./context-menu.js');
+// Static imports (required — dynamic import() is banned in SW)
+import './background.js';
+import {
+  createContextMenus, handleContextMenuClick
+} from './context-menu.js';
+
+// Context menus persist — only recreate on install/update
+chrome.runtime.onInstalled.addListener(() => {
   createContextMenus();
 });
 
-// Lazy-load context menu handler only when user actually clicks a menu item
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  const { handleContextMenuClick } = await import('./context-menu.js');
-  handleContextMenuClick(info, tab);
-});
+chrome.contextMenus.onClicked.addListener(handleContextMenuClick);

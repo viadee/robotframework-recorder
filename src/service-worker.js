@@ -1,26 +1,25 @@
-import './constants.js';
-import './translator/robot-translator.js';
+// Background must be imported statically — Chrome MV3 requires
+// event listeners (onMessage) to be registered synchronously at top level.
+// ES module imports are hoisted, so this runs first regardless of position.
 import './background.js';
-import {
-  createContextMenus, handleContextMenuClick
-} from './context-menu.js';
 
-// Ensure side panel is configured on every SW startup
-// TEMP: using test-panel.html to debug blank panel issue
-chrome.sidePanel.setOptions({ path: 'src/test-panel.html', enabled: true })
+// Side panel config — these are persistent, Chrome remembers them.
+// Runs after imports but still during SW initialization.
+chrome.sidePanel.setOptions({ path: 'src/popup.html', enabled: true })
   .catch(err => console.warn('sidePanel.setOptions failed:', err));
-
-// Tell Chrome to open the side panel immediately on icon click (native, no SW delay)
-// This is a persistent setting — Chrome remembers it even after SW terminates
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
   .catch(err => console.warn('setPanelBehavior failed:', err));
 
-// Also set it on install to guarantee it's configured from the start
-chrome.runtime.onInstalled.addListener(() => {
+// Context menus only need to be created on install/update (they persist)
+chrome.runtime.onInstalled.addListener(async () => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
-    .catch(err => console.warn('setPanelBehavior onInstalled failed:', err));
+    .catch(err => console.warn('setPanelBehavior onInstalled:', err));
+  const { createContextMenus } = await import('./context-menu.js');
+  createContextMenus();
 });
 
-// Set up context menus
-createContextMenus();
-chrome.contextMenus.onClicked.addListener(handleContextMenuClick);
+// Lazy-load context menu handler only when user actually clicks a menu item
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  const { handleContextMenuClick } = await import('./context-menu.js');
+  handleContextMenuClick(info, tab);
+});
